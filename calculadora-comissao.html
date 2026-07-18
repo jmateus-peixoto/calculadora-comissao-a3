@@ -1,0 +1,2363 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12394a">
+  <meta name="description" content="Calculadora de comissão por produto, com inclusão de várias vendas, escolha de 5% ou 15% para a promotora e resumo detalhado item por item.">
+  <title>Calculadora de Comissão</title>
+  <style>
+:root {
+  --bg: #edf4f2;
+  --surface: rgba(255, 255, 255, 0.94);
+  --surface-solid: #ffffff;
+  --ink: #14313b;
+  --muted: #667d83;
+  --line: #d9e6e3;
+  --line-strong: #c8d9d5;
+  --primary: #0d756e;
+  --primary-dark: #075a54;
+  --primary-soft: #e1f4f0;
+  --primary-softer: #f0faf8;
+  --navy: #12394a;
+  --navy-dark: #0c2a38;
+  --gold: #d5a54c;
+  --danger: #9c3c3c;
+  --danger-soft: #fff1f1;
+  --warning: #845f16;
+  --warning-soft: #fff8e7;
+  --shadow: 0 24px 70px rgba(17, 54, 63, 0.11);
+  --shadow-soft: 0 12px 34px rgba(17, 54, 63, 0.075);
+  --radius-xl: 30px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --focus: 0 0 0 4px rgba(13, 117, 110, 0.17);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 7% 0%, rgba(13, 117, 110, 0.13), transparent 30rem),
+    radial-gradient(circle at 95% 18%, rgba(213, 165, 76, 0.1), transparent 25rem),
+    var(--bg);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button,
+select,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+select,
+summary {
+  cursor: pointer;
+}
+
+button {
+  border: 0;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+.page-glow {
+  position: fixed;
+  z-index: -1;
+  border-radius: 999px;
+  filter: blur(30px);
+  pointer-events: none;
+}
+
+.page-glow-one {
+  top: 24rem;
+  left: -10rem;
+  width: 25rem;
+  height: 25rem;
+  background: rgba(90, 181, 171, 0.1);
+}
+
+.page-glow-two {
+  right: -8rem;
+  bottom: 5rem;
+  width: 20rem;
+  height: 20rem;
+  background: rgba(213, 165, 76, 0.1);
+}
+
+.app-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 24px auto 44px;
+}
+
+.hero {
+  position: relative;
+  min-height: 330px;
+  padding: 56px 58px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 34px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.07), transparent 42%),
+    linear-gradient(128deg, var(--navy-dark), var(--navy) 55%, #0f665f 130%);
+  box-shadow: var(--shadow);
+  color: #fff;
+}
+
+.hero::before,
+.hero::after {
+  position: absolute;
+  content: "";
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero::before {
+  top: -140px;
+  right: 16%;
+  width: 330px;
+  height: 330px;
+}
+
+.hero::after {
+  right: -135px;
+  bottom: -220px;
+  width: 480px;
+  height: 480px;
+}
+
+.eyebrow,
+.section-kicker {
+  margin-bottom: 6px;
+  color: #87ded4;
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin-bottom: 14px;
+  font-size: clamp(2.45rem, 5.4vw, 4.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin-bottom: 27px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: clamp(1rem, 1.6vw, 1.12rem);
+}
+
+.hero-button,
+.primary-button,
+.secondary-button,
+.ghost-button,
+.copy-button,
+.danger-button,
+.item-action {
+  min-height: 48px;
+  border-radius: 14px;
+  font-weight: 780;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.hero-button {
+  position: relative;
+  z-index: 1;
+  min-height: 54px;
+  padding: 0 24px;
+  background: #fff;
+  box-shadow: 0 15px 34px rgba(2, 30, 38, 0.22);
+  color: var(--navy-dark);
+}
+
+.hero-button:hover,
+.primary-button:hover,
+.secondary-button:hover,
+.ghost-button:hover,
+.copy-button:hover,
+.danger-button:hover,
+.item-action:hover {
+  transform: translateY(-1px);
+}
+
+.hero-button:hover {
+  box-shadow: 0 18px 40px rgba(2, 30, 38, 0.28);
+}
+
+.hero-note {
+  position: relative;
+  z-index: 1;
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.76rem;
+}
+
+.how-card,
+.card {
+  border: 1px solid rgba(211, 226, 223, 0.9);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(12px);
+}
+
+.how-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.55fr);
+  gap: 36px;
+  margin-top: 22px;
+  padding: 28px 30px;
+  border-radius: 24px;
+}
+
+.how-heading h2 {
+  margin-bottom: 8px;
+  font-size: 1.35rem;
+  letter-spacing: -0.025em;
+}
+
+.how-heading > p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.how-card .section-kicker,
+.card .section-kicker {
+  color: var(--primary);
+}
+
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.how-steps article {
+  display: flex;
+  gap: 11px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(248, 252, 251, 0.86);
+}
+
+.how-steps article > span,
+.step-number {
+  display: grid;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.how-steps strong {
+  display: block;
+  margin: 1px 0 3px;
+  font-size: 0.82rem;
+}
+
+.how-steps p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.calculator-area {
+  margin-top: 24px;
+  scroll-margin-top: 16px;
+}
+
+.calculator-area.revealed {
+  animation: reveal 320ms ease both;
+}
+
+@keyframes reveal {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.card {
+  border-radius: var(--radius-xl);
+}
+
+.settings-card,
+.sale-form-card,
+.summary-card,
+.sales-card {
+  padding: 30px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.section-heading h2,
+.summary-heading h2,
+.sales-heading h2 {
+  margin-bottom: 3px;
+  font-size: 1.28rem;
+  letter-spacing: -0.025em;
+}
+
+.section-heading > div > p:last-child,
+.summary-heading p,
+.sales-heading p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.83rem;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.choice-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fbfdfd;
+}
+
+.choice-fieldset legend {
+  padding: 0 5px;
+  color: #294850;
+  font-size: 0.84rem;
+  font-weight: 820;
+}
+
+.segmented-options {
+  display: grid;
+  gap: 8px;
+}
+
+.role-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.promoter-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.segmented-options label {
+  margin: 0;
+}
+
+.segmented-options input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented-options span {
+  display: grid;
+  min-height: 48px;
+  place-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 790;
+  text-align: center;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.segmented-options span:hover {
+  transform: translateY(-1px);
+  border-color: #b8d3ce;
+}
+
+.segmented-options input:checked + span {
+  border-color: rgba(13, 117, 110, 0.4);
+  background: var(--primary-soft);
+  box-shadow: 0 7px 18px rgba(13, 117, 110, 0.08);
+  color: var(--primary-dark);
+}
+
+.segmented-options input:focus-visible + span {
+  box-shadow: var(--focus);
+}
+
+.field-help {
+  margin: 9px 2px 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.product-rule-note {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.5fr);
+  gap: 18px;
+  margin-top: 16px;
+  padding: 17px 18px;
+  border: 1px solid #ead8aa;
+  border-radius: 16px;
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.product-rule-note strong {
+  font-size: 0.84rem;
+}
+
+.product-rule-note p {
+  margin: 0;
+  font-size: 0.76rem;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+  gap: 24px;
+  margin-top: 24px;
+  align-items: start;
+}
+
+.sale-form-card {
+  min-width: 0;
+}
+
+.summary-card {
+  position: sticky;
+  top: 16px;
+  overflow: hidden;
+  background:
+    linear-gradient(160deg, rgba(225, 244, 240, 0.66), rgba(255, 255, 255, 0.96) 42%),
+    var(--surface-solid);
+}
+
+.summary-card::after {
+  position: absolute;
+  top: -80px;
+  right: -85px;
+  width: 210px;
+  height: 210px;
+  border: 28px solid rgba(13, 117, 110, 0.035);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.summary-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.field {
+  margin-bottom: 21px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 8px;
+  color: #294850;
+  font-size: 0.86rem;
+  font-weight: 780;
+}
+
+.currency-control,
+.select-wrap,
+.search-control {
+  position: relative;
+}
+
+.currency-control {
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #fbfdfd;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.currency-control:focus-within,
+.select-wrap:focus-within,
+.search-control:focus-within {
+  border-color: rgba(13, 117, 110, 0.6);
+  background: #fff;
+  box-shadow: var(--focus);
+}
+
+.currency-control.invalid {
+  border-color: rgba(156, 60, 60, 0.65);
+  box-shadow: 0 0 0 4px rgba(156, 60, 60, 0.1);
+}
+
+.currency-control > span {
+  display: grid;
+  align-self: stretch;
+  min-width: 58px;
+  place-items: center;
+  border-right: 1px solid var(--line);
+  background: #f0f7f6;
+  color: var(--primary-dark);
+  font-weight: 850;
+}
+
+.currency-control input {
+  width: 100%;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1.32rem;
+  font-weight: 790;
+}
+
+.currency-control input::placeholder {
+  color: #a7b8bb;
+}
+
+.select-wrap {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #fbfdfd;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.select-wrap select {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 48px 0 15px;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 670;
+}
+
+.select-wrap > svg {
+  position: absolute;
+  right: 16px;
+  width: 20px;
+  height: 20px;
+  color: var(--primary);
+  pointer-events: none;
+}
+
+.field-hint,
+.field-error {
+  margin: 7px 2px 0;
+  font-size: 0.73rem;
+}
+
+.field-hint {
+  color: var(--muted);
+}
+
+.field-error {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.rate-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 2px;
+  padding: 17px 18px;
+  border: 1px solid rgba(13, 117, 110, 0.2);
+  border-radius: 17px;
+  background: var(--primary-softer);
+}
+
+.rate-preview > div {
+  display: grid;
+  min-width: 0;
+}
+
+.rate-preview span,
+.rate-preview small {
+  color: var(--muted);
+}
+
+.rate-preview span {
+  margin-bottom: 2px;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rate-preview strong {
+  overflow: hidden;
+  font-size: 0.91rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rate-preview small {
+  overflow: hidden;
+  margin-top: 1px;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rate-preview b {
+  display: grid;
+  flex: 0 0 auto;
+  min-width: 70px;
+  min-height: 46px;
+  place-items: center;
+  padding: 7px 12px;
+  border-radius: 13px;
+  background: var(--primary);
+  box-shadow: 0 10px 23px rgba(13, 117, 110, 0.18);
+  color: #fff;
+  font-size: 1.08rem;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 25px;
+}
+
+.primary-button {
+  flex: 1 1 230px;
+  padding: 0 19px;
+  background: linear-gradient(135deg, var(--primary), #11948a);
+  box-shadow: 0 13px 26px rgba(13, 117, 110, 0.21);
+  color: #fff;
+}
+
+.primary-button:hover {
+  box-shadow: 0 16px 31px rgba(13, 117, 110, 0.26);
+}
+
+.secondary-button,
+.ghost-button,
+.copy-button,
+.danger-button,
+.item-action {
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.secondary-button,
+.copy-button {
+  color: var(--primary-dark);
+}
+
+.ghost-button {
+  color: var(--muted);
+}
+
+.summary-heading,
+.sales-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.summary-heading > div,
+.sales-heading > div {
+  min-width: 0;
+}
+
+.summary-count,
+.list-total {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border: 1px solid rgba(13, 117, 110, 0.18);
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.total-amount {
+  margin-top: 30px;
+  color: var(--navy);
+  font-size: clamp(2.8rem, 5vw, 4.15rem);
+  font-weight: 920;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.total-caption {
+  min-height: 42px;
+  margin: 9px 0 22px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.summary-metrics article {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.summary-metrics span,
+.component-breakdown span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 710;
+}
+
+.summary-metrics strong {
+  overflow: hidden;
+  font-size: 0.95rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.component-breakdown {
+  display: grid;
+  gap: 9px;
+  margin-top: 10px;
+  padding: 14px 15px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.component-breakdown > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.component-breakdown strong {
+  font-size: 0.85rem;
+}
+
+.summary-note {
+  margin: 14px 2px 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.summary-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.copy-button,
+.danger-button {
+  width: 100%;
+}
+
+.danger-button {
+  border-color: #efd4d4;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.sales-card {
+  margin-top: 24px;
+}
+
+.sales-heading {
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.empty-state {
+  margin-top: 20px;
+  padding: 35px 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 18px;
+  background: #f9fcfb;
+  text-align: center;
+}
+
+.empty-state strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.sales-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.sale-item {
+  display: grid;
+  grid-template-columns: minmax(230px, 1.15fr) minmax(230px, 1.18fr) minmax(105px, 0.48fr) minmax(120px, 0.55fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.sale-item:hover {
+  transform: translateY(-1px);
+  border-color: #c4dad6;
+  box-shadow: 0 9px 24px rgba(17, 54, 63, 0.06);
+}
+
+.sale-identity {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.sale-index {
+  display: grid;
+  flex: 0 0 auto;
+  min-width: 46px;
+  min-height: 46px;
+  place-items: center;
+  padding: 5px;
+  border-radius: 13px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.sale-identity > div {
+  min-width: 0;
+}
+
+.sale-identity h3 {
+  margin-bottom: 3px;
+  font-size: 0.91rem;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.sale-identity h3 span {
+  color: var(--primary);
+}
+
+.sale-identity p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.4;
+}
+
+.sale-formula {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.sale-formula span,
+.sale-value-block span,
+.sale-commission-block span {
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 720;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.sale-formula strong {
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.sale-formula small {
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.sale-value-block,
+.sale-commission-block {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.sale-value-block strong,
+.sale-commission-block strong {
+  overflow: hidden;
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sale-commission-block strong {
+  color: var(--primary-dark);
+  font-size: 0.96rem;
+}
+
+.sale-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.item-action {
+  min-height: 38px;
+  padding: 0 11px;
+  border-radius: 11px;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.item-action.edit {
+  color: var(--primary-dark);
+}
+
+.item-action.remove {
+  border-color: #efd7d7;
+  color: var(--danger);
+}
+
+.rate-card {
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+.rate-card summary {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 28px;
+  list-style: none;
+  user-select: none;
+}
+
+.rate-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.rate-card summary span {
+  display: grid;
+}
+
+.rate-card summary strong {
+  font-size: 0.94rem;
+}
+
+.rate-card summary small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.rate-card summary > svg {
+  width: 21px;
+  height: 21px;
+  color: var(--primary);
+  transition: transform 180ms ease;
+}
+
+.rate-card[open] summary > svg {
+  transform: rotate(180deg);
+}
+
+.table-content {
+  padding: 0 28px 28px;
+  border-top: 1px solid var(--line);
+}
+
+.search-control {
+  display: flex;
+  max-width: 440px;
+  min-height: 46px;
+  align-items: center;
+  gap: 9px;
+  margin: 20px 0 16px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #fbfdfd;
+}
+
+.search-control svg {
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+  color: var(--muted);
+}
+
+.search-control input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+.search-control input::placeholder {
+  color: #93a5a9;
+}
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+th,
+td {
+  padding: 12px 13px;
+  border-bottom: 1px solid #e7efee;
+  text-align: left;
+  vertical-align: middle;
+}
+
+th {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  background: #f2f8f6;
+  color: #496168;
+  font-size: 0.67rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr:hover {
+  background: #f9fcfb;
+}
+
+.code-badge,
+.percent-badge,
+.used-rate-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.69rem;
+  font-weight: 830;
+  white-space: nowrap;
+}
+
+.code-badge {
+  padding: 4px 8px;
+  background: #eef4f3;
+  color: #52686e;
+}
+
+.percent-badge {
+  min-width: 48px;
+  padding: 4px 8px;
+  background: #f1f5f4;
+  color: #536b70;
+}
+
+.percent-badge.zero {
+  color: #87979a;
+}
+
+.used-rate-badge {
+  min-width: 54px;
+  padding: 5px 9px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.empty-table-message {
+  margin: 0;
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 21px 4px 0;
+  color: var(--muted);
+  font-size: 0.71rem;
+}
+
+footer p {
+  margin-bottom: 0;
+}
+
+.toast {
+  position: fixed;
+  z-index: 50;
+  right: 24px;
+  bottom: 24px;
+  transform: translateY(18px);
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--navy-dark);
+  box-shadow: var(--shadow-soft);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 720;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.noscript-message {
+  position: fixed;
+  z-index: 100;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--danger);
+  color: #fff;
+  text-align: center;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.hero-button:focus-visible,
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.ghost-button:focus-visible,
+.copy-button:focus-visible,
+.danger-button:focus-visible,
+.item-action:focus-visible,
+summary:focus-visible {
+  outline: 0;
+  box-shadow: var(--focus);
+}
+
+@media (max-width: 1040px) {
+  .how-card {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card {
+    position: static;
+  }
+
+  .sale-item {
+    grid-template-columns: minmax(230px, 1.05fr) minmax(230px, 1fr) minmax(110px, 0.48fr) minmax(120px, 0.55fr);
+  }
+
+  .sale-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    padding-top: 11px;
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 790px) {
+  .app-shell {
+    width: min(100% - 20px, 1180px);
+    margin-top: 10px;
+  }
+
+  .hero {
+    min-height: auto;
+    padding: 38px 28px;
+    border-radius: 25px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.25rem, 10vw, 3.45rem);
+  }
+
+  .how-card {
+    padding: 24px 20px;
+  }
+
+  .how-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-card,
+  .sale-form-card,
+  .summary-card,
+  .sales-card {
+    padding: 23px 19px;
+    border-radius: 22px;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-rule-note {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .sale-item {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sale-identity,
+  .sale-formula {
+    grid-column: 1 / -1;
+  }
+
+  .sale-actions {
+    grid-column: 1 / -1;
+  }
+
+  .rate-card summary,
+  .table-content {
+    padding-right: 19px;
+    padding-left: 19px;
+  }
+
+  footer {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero {
+    padding: 31px 21px;
+  }
+
+  .hero-button {
+    width: 100%;
+    padding: 0 14px;
+  }
+
+  .role-options {
+    grid-template-columns: 1fr;
+  }
+
+  .segmented-options span {
+    min-height: 44px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .ghost-button {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .rate-preview {
+    align-items: flex-start;
+  }
+
+  .rate-preview strong,
+  .rate-preview small {
+    white-space: normal;
+  }
+
+  .summary-heading,
+  .sales-heading {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .summary-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .total-amount {
+    font-size: clamp(2.55rem, 15vw, 3.35rem);
+  }
+
+  .sale-item {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .sale-identity,
+  .sale-formula,
+  .sale-actions {
+    grid-column: auto;
+  }
+
+  .sale-value-block,
+  .sale-commission-block {
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .sale-actions {
+    justify-content: stretch;
+  }
+
+  .item-action {
+    flex: 1;
+  }
+
+  .toast {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="page-glow page-glow-one" aria-hidden="true"></div>
+  <div class="page-glow page-glow-two" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <header class="hero">
+      <p class="eyebrow">Comissões por produto</p>
+      <h1>Calculadora de Comissão</h1>
+      <p class="hero-copy">
+        Cada tipo de venda possui uma porcentagem própria. Configure a regra da promotora,
+        adicione quantas vendas precisar e acompanhe a comissão total com o cálculo de cada item.
+      </p>
+      <button
+        class="hero-button"
+        id="startCalculator"
+        type="button"
+        aria-controls="calculatorArea"
+        aria-expanded="false"
+      >
+        Iniciar calculadora de comissão
+      </button>
+      <p class="hero-note">Os cálculos são feitos no próprio navegador e funcionam offline.</p>
+    </header>
+
+    <section class="how-card" aria-labelledby="howTitle">
+      <div class="how-heading">
+        <p class="section-kicker">Como funciona</p>
+        <h2 id="howTitle">Três passos para chegar ao total</h2>
+        <p>O percentual usado aparece entre parênteses ao lado de cada tipo de venda.</p>
+      </div>
+
+      <div class="how-steps">
+        <article>
+          <span>1</span>
+          <div>
+            <strong>Defina a regra</strong>
+            <p>Escolha Emissora, Promotora ou Ambas e selecione 5% ou 15% para a promotora.</p>
+          </div>
+        </article>
+        <article>
+          <span>2</span>
+          <div>
+            <strong>Adicione as vendas</strong>
+            <p>Informe o valor, escolha o produto e inclua quantos itens forem necessários.</p>
+          </div>
+        </article>
+        <article>
+          <span>3</span>
+          <div>
+            <strong>Confira o resumo</strong>
+            <p>Veja o total vendido, a comissão total e a fórmula detalhada de cada venda.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <main class="calculator-area" id="calculatorArea" hidden>
+      <section class="card settings-card" aria-labelledby="settingsTitle">
+        <div class="section-heading">
+          <span class="step-number">1</span>
+          <div>
+            <p class="section-kicker">Configuração geral</p>
+            <h2 id="settingsTitle">Defina como a comissão será calculada</h2>
+            <p>Alterar uma opção abaixo recalcula automaticamente todas as vendas adicionadas.</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <fieldset class="choice-fieldset">
+            <legend>Comissão de quem?</legend>
+            <div class="segmented-options role-options">
+              <label>
+                <input type="radio" name="role" value="emissor">
+                <span>Emissora</span>
+              </label>
+              <label>
+                <input type="radio" name="role" value="promotor" checked>
+                <span>Promotora</span>
+              </label>
+              <label>
+                <input type="radio" name="role" value="ambos">
+                <span>Ambas</span>
+              </label>
+            </div>
+            <p class="field-help" id="roleHelp">O percentual exibido nos produtos corresponde à comissão da promotora.</p>
+          </fieldset>
+
+          <fieldset class="choice-fieldset promoter-setting">
+            <legend>Percentual da promotora</legend>
+            <div class="segmented-options promoter-options">
+              <label>
+                <input type="radio" name="promoterRate" value="5">
+                <span>5%</span>
+              </label>
+              <label>
+                <input type="radio" name="promoterRate" value="15" checked>
+                <span>15%</span>
+              </label>
+            </div>
+            <p class="field-help">Aplicado somente aos produtos que têm 5% no mapa. Produtos com 0% continuam em 0%.</p>
+          </fieldset>
+        </div>
+
+        <div class="product-rule-note" role="note">
+          <strong>As comissões variam de acordo com o produto.</strong>
+          <p>
+            Ao abrir “Tipo de venda”, observe a porcentagem entre parênteses. Esse é o percentual
+            que será aplicado ao valor daquela venda conforme as configurações escolhidas acima.
+          </p>
+        </div>
+      </section>
+
+      <div class="workspace-grid">
+        <form class="card sale-form-card" id="saleForm" novalidate>
+          <div class="section-heading">
+            <span class="step-number">2</span>
+            <div>
+              <p class="section-kicker">Nova venda</p>
+              <h2 id="saleFormTitle">Adicione uma venda</h2>
+              <p>Depois de adicionar, o item entra no detalhamento e no total.</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="saleValue">Valor da venda</label>
+            <div class="currency-control">
+              <span aria-hidden="true">R$</span>
+              <input
+                id="saleValue"
+                name="saleValue"
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder="0,00"
+                aria-describedby="saleValueHint saleValueError"
+              >
+            </div>
+            <p class="field-hint" id="saleValueHint">Exemplo: 1.250,00</p>
+            <p class="field-error" id="saleValueError" hidden>Informe um valor maior que zero.</p>
+          </div>
+
+          <div class="field">
+            <label for="saleType">Tipo de venda</label>
+            <div class="select-wrap">
+              <select id="saleType" name="saleType" required aria-describedby="saleTypeHint"></select>
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+              </svg>
+            </div>
+            <p class="field-hint" id="saleTypeHint">A porcentagem entre parênteses é a usada nesta venda.</p>
+          </div>
+
+          <div class="rate-preview" aria-live="polite">
+            <div>
+              <span>Percentual deste produto</span>
+              <strong id="currentProductName">Bilhete Internacional</strong>
+              <small id="currentProductMeta">BILI · Internacional · Bilhete</small>
+            </div>
+            <b id="currentProductRate">15%</b>
+          </div>
+
+          <div class="form-actions">
+            <button class="primary-button" id="submitSaleButton" type="submit">Adicionar venda à lista</button>
+            <button class="secondary-button" id="cancelEditButton" type="button" hidden>Cancelar edição</button>
+            <button class="ghost-button" id="clearFormButton" type="button">Limpar campos</button>
+          </div>
+        </form>
+
+        <aside class="card summary-card" aria-labelledby="summaryTitle" aria-live="polite">
+          <div class="summary-heading">
+            <div>
+              <p class="section-kicker">Resumo automático</p>
+              <h2 id="summaryTitle">Comissão total</h2>
+              <p id="summaryRuleLabel">Comissão da promotora</p>
+            </div>
+            <span class="summary-count" id="summaryCount">0 vendas</span>
+          </div>
+
+          <div class="total-amount" id="totalCommission">R$ 0,00</div>
+          <p class="total-caption" id="totalCaption">Adicione a primeira venda para iniciar o cálculo.</p>
+
+          <div class="summary-metrics">
+            <article>
+              <span>Total vendido</span>
+              <strong id="totalSalesValue">R$ 0,00</strong>
+            </article>
+            <article>
+              <span>Taxa média efetiva</span>
+              <strong id="averageRate">0%</strong>
+            </article>
+          </div>
+
+          <div class="component-breakdown">
+            <div>
+              <span>Total da emissora</span>
+              <strong id="totalIssuer">R$ 0,00</strong>
+            </div>
+            <div>
+              <span>Total da promotora</span>
+              <strong id="totalPromoter">R$ 0,00</strong>
+            </div>
+          </div>
+
+          <p class="summary-note">
+            A comissão total é a soma das comissões individuais mostradas na lista abaixo.
+          </p>
+
+          <div class="summary-actions">
+            <button class="copy-button" id="copySummaryButton" type="button" disabled>Copiar resumo detalhado</button>
+            <button class="danger-button" id="clearAllButton" type="button" disabled>Limpar todas as vendas</button>
+          </div>
+        </aside>
+      </div>
+
+      <section class="card sales-card" aria-labelledby="salesTitle">
+        <div class="sales-heading">
+          <div>
+            <p class="section-kicker">Detalhamento item por item</p>
+            <h2 id="salesTitle">Vendas adicionadas</h2>
+            <p>Cada linha mostra o valor da venda, a porcentagem aplicada, a fórmula e a comissão gerada.</p>
+          </div>
+          <span class="list-total" id="listTotal">0 itens</span>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+          <strong>Nenhuma venda adicionada ainda.</strong>
+          <p>Use o formulário acima para incluir a primeira venda.</p>
+        </div>
+
+        <div class="sales-list" id="salesList"></div>
+      </section>
+
+      <details class="card rate-card">
+        <summary>
+          <span>
+            <strong>Consultar tabela completa de percentuais</strong>
+            <small>A tabela acompanha a regra de 5% ou 15% escolhida para a promotora.</small>
+          </span>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+          </svg>
+        </summary>
+
+        <div class="table-content">
+          <label class="search-control" for="rateSearch">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle cx="8.5" cy="8.5" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+              <path d="m12.3 12.3 4 4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.6"/>
+            </svg>
+            <input id="rateSearch" type="search" placeholder="Buscar por produto, sigla ou categoria">
+          </label>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo de venda</th>
+                  <th>Sigla</th>
+                  <th>Categoria</th>
+                  <th>Emissora</th>
+                  <th>Promotora</th>
+                  <th>Percentual usado</th>
+                </tr>
+              </thead>
+              <tbody id="rateTableBody"></tbody>
+            </table>
+            <p class="empty-table-message" id="emptyTableMessage" hidden>Nenhum tipo encontrado.</p>
+          </div>
+        </div>
+      </details>
+    </main>
+
+    <footer>
+      <p>Calculadora configurada com os produtos do mapa de comissionamento fornecido.</p>
+      <p>Os percentuais são aplicados diretamente sobre o valor informado em cada venda.</p>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <noscript>
+    <div class="noscript-message">Ative o JavaScript para usar a calculadora de comissão.</div>
+  </noscript>
+
+  <script>
+"use strict";
+
+// Percentuais transcritos do mapa de comissionamento fornecido.
+// A configuração de 5% ou 15% afeta somente os produtos cujo percentual
+// original da promotora é 5%. Produtos com 0% permanecem em 0%.
+const products = [
+  { description: "Bilhete Nacional", code: "BILN", category: "Nacional", classification: "Bilhete", issuerRate: 6, promoterOriginalRate: 0 },
+  { description: "Bilhete Internacional", code: "BILI", category: "Internacional", classification: "Bilhete", issuerRate: 8, promoterOriginalRate: 5 },
+  { description: "Bilhete TAP", code: "BILP", category: "Internacional", classification: "Bilhete", issuerRate: 8, promoterOriginalRate: 5 },
+  { description: "Bilhete Nacional EMP", code: "BLE", category: "Nacional", classification: "Bilhete", issuerRate: 13, promoterOriginalRate: 0 },
+  { description: "Reembolso Bilhete Nacional", code: "BIRN", category: "Nacional", classification: "Bilhete", issuerRate: 7, promoterOriginalRate: 5 },
+  { description: "Reembolso Bilhete Internacional", code: "BIRI", category: "Internacional", classification: "Bilhete", issuerRate: 8, promoterOriginalRate: 0 },
+  { description: "Reembolso Bilhete TAP", code: "TRTP", category: "Internacional", classification: "Bilhete", issuerRate: 8, promoterOriginalRate: 0 },
+  { description: "Marcação de Assento Criança TAP", code: "MACH", category: "Internacional", classification: "Bilhete", issuerRate: 40, promoterOriginalRate: 0 },
+  { description: "Marcação de Assento Internacional", code: "MASI", category: "Internacional", classification: "Bilhete", issuerRate: 40, promoterOriginalRate: 0 },
+  { description: "Outras Taxas de Serviços TAP", code: "OXTP", category: "Internacional", classification: "Diversos", issuerRate: 40, promoterOriginalRate: 0 },
+  { description: "Hotel Nacional", code: "HOTN", category: "Nacional", classification: "Hotelaria", issuerRate: 8, promoterOriginalRate: 5 },
+  { description: "Hotel Nacional com a Receber", code: "HNCR", category: "Nacional", classification: "Hotelaria", issuerRate: 8, promoterOriginalRate: 5 },
+  { description: "Hotel Inter", code: "THI", category: "Internacional", classification: "Hotelaria", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Hotel Inter com a Receber", code: "HICR", category: "Internacional", classification: "Hotelaria", issuerRate: 10, promoterOriginalRate: 0 },
+  { description: "Pacote Terrestre Nacional", code: "PCTN", category: "Nacional", classification: "Pacote", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Pacote Terrestre Internacional", code: "PCTI", category: "Internacional", classification: "Pacote", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Comissão a Receber Nacional", code: "COMN", category: "Nacional", classification: "Pacote", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Comissão Inter", code: "COMI", category: "Internacional", classification: "Pacote", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Carro Nacional", code: "LOCN", category: "Nacional", classification: "Locação", issuerRate: 8, promoterOriginalRate: 5 },
+  { description: "Carro Nacional Comissão a Receber", code: "LNCR", category: "Nacional", classification: "Locação", issuerRate: 8, promoterOriginalRate: 5 },
+  { description: "Carro Internacional", code: "LOCI", category: "Internacional", classification: "Locação", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Multa e Avarias Locação", code: "MLOC", category: "Nacional", classification: "Locação", issuerRate: 6, promoterOriginalRate: 5 },
+  { description: "Assistência Conforto Nacional", code: "ACON", category: "Nacional", classification: "Diversos", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Assistência Conforto Internacional", code: "ASI", category: "Internacional", classification: "Bilhete", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Seguro Nacional", code: "SEGN", category: "Nacional", classification: "Diversos", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Seguro Internacional", code: "SEGI", category: "Internacional", classification: "Diversos", issuerRate: 12, promoterOriginalRate: 5 },
+  { description: "Seguro Inter JMJ", code: "SJMJ", category: "Internacional", classification: "Diversos", issuerRate: 10, promoterOriginalRate: 0 },
+  { description: "Cruzeiro Nacional", code: "CNAC", category: "Nacional", classification: "Diversos", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Cruzeiro Internacional", code: "CINT", category: "Internacional", classification: "Diversos", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Transfer", code: "TRAN", category: "Nacional", classification: "Diversos", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Inscrição em Eventos", code: "IEVE", category: "Internacional", classification: "Diversos", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Evento", code: "EVEN", category: "Nacional", classification: "Diversos", issuerRate: 8, promoterOriginalRate: 5 },
+  { description: "Fretamento", code: "FRET", category: "Nacional", classification: "Diversos", issuerRate: 6, promoterOriginalRate: 5 },
+  { description: "Rodoviário Nacional", code: "RODN", category: "Nacional", classification: "Rodoviário", issuerRate: 10, promoterOriginalRate: 0 },
+  { description: "Rodoviário Internacional", code: "RODI", category: "Internacional", classification: "Rodoviário", issuerRate: 10, promoterOriginalRate: 5 },
+  { description: "Taxa Bloqueio JMJ", code: "TBLO", category: "Internacional", classification: "Diversos", issuerRate: 10, promoterOriginalRate: 0 },
+  { description: "Visto", code: "VIST", category: "Internacional", classification: "Diversos", issuerRate: 50, promoterOriginalRate: 0 },
+  { description: "RAV Internacional", code: "RAV", category: "Internacional", classification: "Diversos", issuerRate: 8, promoterOriginalRate: 5 }
+];
+
+const state = {
+  role: "promotor",
+  promoterRate: 15,
+  sales: [],
+  editingId: null
+};
+
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+
+const numberFormatter = new Intl.NumberFormat("pt-BR", {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2
+});
+
+const inputNumberFormatter = new Intl.NumberFormat("pt-BR", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+
+const elements = {
+  startCalculator: document.querySelector("#startCalculator"),
+  calculatorArea: document.querySelector("#calculatorArea"),
+  roleInputs: [...document.querySelectorAll('input[name="role"]')],
+  promoterRateInputs: [...document.querySelectorAll('input[name="promoterRate"]')],
+  roleHelp: document.querySelector("#roleHelp"),
+  saleForm: document.querySelector("#saleForm"),
+  saleFormTitle: document.querySelector("#saleFormTitle"),
+  saleValue: document.querySelector("#saleValue"),
+  saleValueControl: document.querySelector(".currency-control"),
+  saleValueError: document.querySelector("#saleValueError"),
+  saleType: document.querySelector("#saleType"),
+  currentProductName: document.querySelector("#currentProductName"),
+  currentProductMeta: document.querySelector("#currentProductMeta"),
+  currentProductRate: document.querySelector("#currentProductRate"),
+  submitSaleButton: document.querySelector("#submitSaleButton"),
+  cancelEditButton: document.querySelector("#cancelEditButton"),
+  clearFormButton: document.querySelector("#clearFormButton"),
+  summaryRuleLabel: document.querySelector("#summaryRuleLabel"),
+  summaryCount: document.querySelector("#summaryCount"),
+  totalCommission: document.querySelector("#totalCommission"),
+  totalCaption: document.querySelector("#totalCaption"),
+  totalSalesValue: document.querySelector("#totalSalesValue"),
+  averageRate: document.querySelector("#averageRate"),
+  totalIssuer: document.querySelector("#totalIssuer"),
+  totalPromoter: document.querySelector("#totalPromoter"),
+  copySummaryButton: document.querySelector("#copySummaryButton"),
+  clearAllButton: document.querySelector("#clearAllButton"),
+  listTotal: document.querySelector("#listTotal"),
+  emptyState: document.querySelector("#emptyState"),
+  salesList: document.querySelector("#salesList"),
+  rateSearch: document.querySelector("#rateSearch"),
+  rateTableBody: document.querySelector("#rateTableBody"),
+  emptyTableMessage: document.querySelector("#emptyTableMessage"),
+  toast: document.querySelector("#toast")
+};
+
+let toastTimer;
+
+function formatCurrency(value) {
+  return currencyFormatter.format(Number.isFinite(value) ? value : 0);
+}
+
+function formatRate(value) {
+  return `${numberFormatter.format(Number.isFinite(value) ? value : 0)}%`;
+}
+
+function normalizeSearch(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function parseCurrency(value) {
+  if (!value || typeof value !== "string") return 0;
+
+  let sanitized = value
+    .trim()
+    .replace(/R\$/gi, "")
+    .replace(/\s/g, "")
+    .replace(/[^0-9,.-]/g, "")
+    .replace(/-/g, "");
+
+  if (!sanitized) return 0;
+
+  const commaCount = (sanitized.match(/,/g) || []).length;
+  const dotCount = (sanitized.match(/\./g) || []).length;
+  const lastComma = sanitized.lastIndexOf(",");
+  const lastDot = sanitized.lastIndexOf(".");
+
+  if (commaCount > 0 && dotCount > 0) {
+    if (lastComma > lastDot) {
+      sanitized = sanitized.replace(/\./g, "").replace(/,/g, ".");
+    } else {
+      sanitized = sanitized.replace(/,/g, "");
+    }
+  } else if (commaCount > 0) {
+    const parts = sanitized.split(",");
+    const decimalPart = parts.pop() || "";
+    sanitized = `${parts.join("")}.${decimalPart}`;
+  } else if (dotCount > 0) {
+    const parts = sanitized.split(".");
+    const lastPart = parts[parts.length - 1] || "";
+    const looksLikeThousands = lastPart.length === 3 && parts.slice(1).every((part) => part.length === 3);
+
+    if (looksLikeThousands) {
+      sanitized = parts.join("");
+    } else {
+      const decimalPart = parts.pop() || "";
+      sanitized = `${parts.join("")}.${decimalPart}`;
+    }
+  }
+
+  const parsed = Number.parseFloat(sanitized);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function getProduct(code) {
+  return products.find((product) => product.code === code) || products.find((product) => product.code === "BILI") || products[0];
+}
+
+function getPromoterRate(product) {
+  return product.promoterOriginalRate === 5
+    ? state.promoterRate
+    : product.promoterOriginalRate;
+}
+
+function getSelectedRate(product) {
+  const promoterRate = getPromoterRate(product);
+
+  if (state.role === "emissor") return product.issuerRate;
+  if (state.role === "ambos") return product.issuerRate + promoterRate;
+  return promoterRate;
+}
+
+function getRoleLabel(role = state.role) {
+  if (role === "emissor") return "Comissão da emissora";
+  if (role === "ambos") return "Emissora + promotora";
+  return "Comissão da promotora";
+}
+
+function calculateSale(sale) {
+  const product = getProduct(sale.productCode);
+  const promoterRate = getPromoterRate(product);
+  const issuerCommission = sale.value * (product.issuerRate / 100);
+  const promoterCommission = sale.value * (promoterRate / 100);
+  const combinedCommission = issuerCommission + promoterCommission;
+  const selectedRate = getSelectedRate(product);
+
+  let selectedCommission = promoterCommission;
+  if (state.role === "emissor") selectedCommission = issuerCommission;
+  if (state.role === "ambos") selectedCommission = combinedCommission;
+
+  return {
+    product,
+    promoterRate,
+    issuerCommission,
+    promoterCommission,
+    combinedCommission,
+    selectedRate,
+    selectedCommission
+  };
+}
+
+function getTotals() {
+  return state.sales.reduce((totals, sale) => {
+    const calculation = calculateSale(sale);
+    totals.salesValue += sale.value;
+    totals.issuer += calculation.issuerCommission;
+    totals.promoter += calculation.promoterCommission;
+    totals.selected += calculation.selectedCommission;
+    return totals;
+  }, {
+    salesValue: 0,
+    issuer: 0,
+    promoter: 0,
+    selected: 0
+  });
+}
+
+function showToast(message) {
+  window.clearTimeout(toastTimer);
+  elements.toast.textContent = message;
+  elements.toast.classList.add("show");
+  toastTimer = window.setTimeout(() => elements.toast.classList.remove("show"), 2300);
+}
+
+function setValueError(show) {
+  elements.saleValueError.hidden = !show;
+  elements.saleValueControl.classList.toggle("invalid", show);
+  elements.saleValue.setAttribute("aria-invalid", String(show));
+}
+
+function populateSaleTypes() {
+  const previousCode = elements.saleType.value || "BILI";
+  const classifications = [...new Set(products.map((product) => product.classification))];
+  const fragment = document.createDocumentFragment();
+
+  classifications.forEach((classification) => {
+    const group = document.createElement("optgroup");
+    group.label = classification;
+
+    products
+      .filter((product) => product.classification === classification)
+      .forEach((product) => {
+        const option = document.createElement("option");
+        option.value = product.code;
+        option.textContent = `${product.description} (${formatRate(getSelectedRate(product))})`;
+        group.append(option);
+      });
+
+    fragment.append(group);
+  });
+
+  elements.saleType.replaceChildren(fragment);
+  elements.saleType.value = products.some((product) => product.code === previousCode)
+    ? previousCode
+    : "BILI";
+}
+
+function updateProductPreview() {
+  const product = getProduct(elements.saleType.value);
+  const selectedRate = getSelectedRate(product);
+  const roleShort = state.role === "emissor"
+    ? "Emissora"
+    : state.role === "ambos"
+      ? "Emissora + promotora"
+      : "Promotora";
+
+  elements.currentProductName.textContent = product.description;
+  elements.currentProductMeta.textContent = `${product.code} · ${product.category} · ${product.classification} · ${roleShort}`;
+  elements.currentProductRate.textContent = formatRate(selectedRate);
+}
+
+function updateSettingsCopy() {
+  const messages = {
+    emissor: "O percentual exibido nos produtos corresponde à comissão da emissora.",
+    promotor: "O percentual exibido nos produtos corresponde à comissão da promotora.",
+    ambos: "O percentual exibido nos produtos é a soma da emissora com a promotora."
+  };
+
+  elements.roleHelp.textContent = messages[state.role];
+  elements.summaryRuleLabel.textContent = getRoleLabel();
+}
+
+function renderRateTable(filter = elements.rateSearch.value) {
+  const normalizedFilter = normalizeSearch(filter);
+  const filteredProducts = products.filter((product) => {
+    const haystack = normalizeSearch([
+      product.description,
+      product.code,
+      product.category,
+      product.classification
+    ].join(" "));
+
+    return haystack.includes(normalizedFilter);
+  });
+
+  elements.rateTableBody.innerHTML = "";
+
+  filteredProducts.forEach((product) => {
+    const promoterRate = getPromoterRate(product);
+    const selectedRate = getSelectedRate(product);
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${product.description}</td>
+      <td><span class="code-badge">${product.code}</span></td>
+      <td>${product.category} · ${product.classification}</td>
+      <td><span class="percent-badge">${formatRate(product.issuerRate)}</span></td>
+      <td><span class="percent-badge ${promoterRate === 0 ? "zero" : ""}">${formatRate(promoterRate)}</span></td>
+      <td><span class="used-rate-badge">${formatRate(selectedRate)}</span></td>
+    `;
+
+    elements.rateTableBody.append(row);
+  });
+
+  elements.emptyTableMessage.hidden = filteredProducts.length !== 0;
+}
+
+function getComponentDetail(calculation) {
+  if (state.role === "ambos") {
+    return `Emissora: ${formatRate(calculation.product.issuerRate)} = ${formatCurrency(calculation.issuerCommission)} · Promotora: ${formatRate(calculation.promoterRate)} = ${formatCurrency(calculation.promoterCommission)}`;
+  }
+
+  if (state.role === "emissor") {
+    return `Comissão da emissora neste produto: ${formatRate(calculation.product.issuerRate)}`;
+  }
+
+  if (calculation.promoterRate === 0) {
+    return "Este produto possui 0% de comissão para a promotora.";
+  }
+
+  return `Comissão da promotora neste produto: ${formatRate(calculation.promoterRate)}`;
+}
+
+function renderSales() {
+  elements.salesList.innerHTML = "";
+  const hasSales = state.sales.length > 0;
+
+  elements.emptyState.hidden = hasSales;
+  elements.listTotal.textContent = `${state.sales.length} ${state.sales.length === 1 ? "item" : "itens"}`;
+
+  state.sales.forEach((sale, index) => {
+    const calculation = calculateSale(sale);
+    const item = document.createElement("article");
+    item.className = "sale-item";
+    item.dataset.id = sale.id;
+
+    item.innerHTML = `
+      <div class="sale-identity">
+        <span class="sale-index">Venda<br>${index + 1}</span>
+        <div>
+          <h3>${calculation.product.description} <span>(${formatRate(calculation.selectedRate)})</span></h3>
+          <p>${calculation.product.code} · ${calculation.product.category} · ${calculation.product.classification} · ${getRoleLabel()}</p>
+        </div>
+      </div>
+
+      <div class="sale-formula">
+        <span>Como foi calculado</span>
+        <strong>${formatCurrency(sale.value)} × ${formatRate(calculation.selectedRate)} = ${formatCurrency(calculation.selectedCommission)}</strong>
+        <small>${getComponentDetail(calculation)}</small>
+      </div>
+
+      <div class="sale-value-block">
+        <span>Valor da venda</span>
+        <strong>${formatCurrency(sale.value)}</strong>
+      </div>
+
+      <div class="sale-commission-block">
+        <span>Comissão gerada</span>
+        <strong>${formatCurrency(calculation.selectedCommission)}</strong>
+      </div>
+
+      <div class="sale-actions">
+        <button class="item-action edit" type="button" data-action="edit" data-id="${sale.id}">Editar</button>
+        <button class="item-action remove" type="button" data-action="remove" data-id="${sale.id}">Excluir</button>
+      </div>
+    `;
+
+    elements.salesList.append(item);
+  });
+
+  updateSummary();
+}
+
+function updateSummary() {
+  const totals = getTotals();
+  const count = state.sales.length;
+  const averageRate = totals.salesValue > 0
+    ? (totals.selected / totals.salesValue) * 100
+    : 0;
+
+  elements.summaryCount.textContent = `${count} ${count === 1 ? "venda" : "vendas"}`;
+  elements.totalCommission.textContent = formatCurrency(totals.selected);
+  elements.totalSalesValue.textContent = formatCurrency(totals.salesValue);
+  elements.averageRate.textContent = formatRate(averageRate);
+  elements.totalIssuer.textContent = formatCurrency(totals.issuer);
+  elements.totalPromoter.textContent = formatCurrency(totals.promoter);
+  elements.copySummaryButton.disabled = count === 0;
+  elements.clearAllButton.disabled = count === 0;
+
+  if (count === 0) {
+    elements.totalCaption.textContent = "Adicione a primeira venda para iniciar o cálculo.";
+  } else {
+    elements.totalCaption.textContent = `Soma das ${count} ${count === 1 ? "comissão individual" : "comissões individuais"} pela regra “${getRoleLabel()}”.`;
+  }
+}
+
+function refreshAllCalculations() {
+  populateSaleTypes();
+  updateProductPreview();
+  updateSettingsCopy();
+  renderSales();
+  renderRateTable();
+}
+
+function resetForm({ preserveProduct = true, focus = true } = {}) {
+  state.editingId = null;
+  elements.saleValue.value = "";
+  setValueError(false);
+
+  if (!preserveProduct) {
+    elements.saleType.value = "BILI";
+  }
+
+  elements.saleFormTitle.textContent = "Adicione uma venda";
+  elements.submitSaleButton.textContent = "Adicionar venda à lista";
+  elements.cancelEditButton.hidden = true;
+  updateProductPreview();
+
+  if (focus) {
+    elements.saleValue.focus({ preventScroll: true });
+  }
+}
+
+function formatInputOnBlur() {
+  const value = parseCurrency(elements.saleValue.value);
+  elements.saleValue.value = value > 0
+    ? inputNumberFormatter.format(value)
+    : "";
+}
+
+function addOrUpdateSale(event) {
+  event.preventDefault();
+  const value = parseCurrency(elements.saleValue.value);
+
+  if (value <= 0) {
+    setValueError(true);
+    elements.saleValue.focus();
+    showToast("Informe um valor de venda maior que zero.");
+    return;
+  }
+
+  const productCode = elements.saleType.value;
+
+  if (state.editingId) {
+    const sale = state.sales.find((item) => item.id === state.editingId);
+    if (sale) {
+      sale.value = value;
+      sale.productCode = productCode;
+      showToast("Venda atualizada.");
+    }
+  } else {
+    const id = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    state.sales.push({ id, value, productCode });
+    showToast("Venda adicionada ao total.");
+  }
+
+  renderSales();
+  resetForm({ preserveProduct: true, focus: true });
+}
+
+function editSale(id) {
+  const sale = state.sales.find((item) => item.id === id);
+  if (!sale) return;
+
+  state.editingId = id;
+  elements.saleValue.value = inputNumberFormatter.format(sale.value);
+  elements.saleType.value = sale.productCode;
+  elements.saleFormTitle.textContent = "Edite a venda selecionada";
+  elements.submitSaleButton.textContent = "Salvar alteração";
+  elements.cancelEditButton.hidden = false;
+  setValueError(false);
+  updateProductPreview();
+
+  elements.saleForm.scrollIntoView({ behavior: "smooth", block: "center" });
+  window.setTimeout(() => elements.saleValue.focus(), 350);
+}
+
+function removeSale(id) {
+  const saleIndex = state.sales.findIndex((item) => item.id === id);
+  if (saleIndex === -1) return;
+
+  state.sales.splice(saleIndex, 1);
+
+  if (state.editingId === id) {
+    resetForm({ preserveProduct: true, focus: false });
+  }
+
+  renderSales();
+  showToast("Venda excluída.");
+}
+
+function clearAllSales() {
+  if (state.sales.length === 0) return;
+
+  const confirmed = window.confirm("Remover todas as vendas adicionadas?");
+  if (!confirmed) return;
+
+  state.sales = [];
+  resetForm({ preserveProduct: false, focus: false });
+  renderSales();
+  showToast("Todas as vendas foram removidas.");
+}
+
+function buildSummaryText() {
+  const totals = getTotals();
+  const lines = [
+    "RESUMO DA CALCULADORA DE COMISSÃO",
+    `Regra selecionada: ${getRoleLabel()}`,
+    `Percentual da promotora nos produtos de 5%: ${formatRate(state.promoterRate)}`,
+    ""
+  ];
+
+  state.sales.forEach((sale, index) => {
+    const calculation = calculateSale(sale);
+    lines.push(`${index + 1}. ${calculation.product.description} (${formatRate(calculation.selectedRate)})`);
+    lines.push(`   ${formatCurrency(sale.value)} × ${formatRate(calculation.selectedRate)} = ${formatCurrency(calculation.selectedCommission)}`);
+
+    if (state.role === "ambos") {
+      lines.push(`   Emissora: ${formatCurrency(calculation.issuerCommission)} | Promotora: ${formatCurrency(calculation.promoterCommission)}`);
+    }
+  });
+
+  lines.push("");
+  lines.push(`Quantidade de vendas: ${state.sales.length}`);
+  lines.push(`Total vendido: ${formatCurrency(totals.salesValue)}`);
+  lines.push(`Total da emissora: ${formatCurrency(totals.issuer)}`);
+  lines.push(`Total da promotora: ${formatCurrency(totals.promoter)}`);
+  lines.push(`COMISSÃO TOTAL: ${formatCurrency(totals.selected)}`);
+
+  return lines.join("\n");
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    const temporary = document.createElement("textarea");
+    temporary.value = text;
+    temporary.style.position = "fixed";
+    temporary.style.opacity = "0";
+    document.body.append(temporary);
+    temporary.select();
+
+    try {
+      return document.execCommand("copy");
+    } catch {
+      return false;
+    } finally {
+      temporary.remove();
+    }
+  }
+}
+
+async function copySummary() {
+  if (state.sales.length === 0) return;
+  const copied = await copyText(buildSummaryText());
+  showToast(copied ? "Resumo detalhado copiado." : "Não foi possível copiar automaticamente.");
+}
+
+function startCalculator() {
+  const wasHidden = elements.calculatorArea.hidden;
+
+  if (wasHidden) {
+    elements.calculatorArea.hidden = false;
+    elements.startCalculator.setAttribute("aria-expanded", "true");
+    elements.startCalculator.textContent = "Ir para a calculadora";
+    window.requestAnimationFrame(() => elements.calculatorArea.classList.add("revealed"));
+  }
+
+  elements.calculatorArea.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.setTimeout(() => elements.saleValue.focus(), wasHidden ? 450 : 250);
+}
+
+function handleSettingsChange() {
+  state.role = elements.roleInputs.find((input) => input.checked)?.value || "promotor";
+  state.promoterRate = Number(elements.promoterRateInputs.find((input) => input.checked)?.value || 15);
+  refreshAllCalculations();
+}
+
+function initialize() {
+  populateSaleTypes();
+  updateProductPreview();
+  updateSettingsCopy();
+  renderSales();
+  renderRateTable();
+
+  elements.startCalculator.addEventListener("click", startCalculator);
+  elements.saleForm.addEventListener("submit", addOrUpdateSale);
+  elements.saleType.addEventListener("change", updateProductPreview);
+  elements.saleValue.addEventListener("input", () => {
+    if (parseCurrency(elements.saleValue.value) > 0) setValueError(false);
+  });
+  elements.saleValue.addEventListener("blur", formatInputOnBlur);
+  elements.saleValue.addEventListener("focus", () => elements.saleValue.select());
+  elements.roleInputs.forEach((input) => input.addEventListener("change", handleSettingsChange));
+  elements.promoterRateInputs.forEach((input) => input.addEventListener("change", handleSettingsChange));
+  elements.cancelEditButton.addEventListener("click", () => resetForm({ preserveProduct: true, focus: true }));
+  elements.clearFormButton.addEventListener("click", () => resetForm({ preserveProduct: false, focus: true }));
+  elements.clearAllButton.addEventListener("click", clearAllSales);
+  elements.copySummaryButton.addEventListener("click", copySummary);
+  elements.rateSearch.addEventListener("input", (event) => renderRateTable(event.target.value));
+
+  elements.salesList.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+
+    const { action, id } = button.dataset;
+    if (action === "edit") editSale(id);
+    if (action === "remove") removeSale(id);
+  });
+}
+
+initialize();
+
+  </script>
+</body>
+</html>

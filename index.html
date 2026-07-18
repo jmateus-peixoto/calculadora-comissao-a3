@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12394a">
+  <meta name="description" content="Calculadora de comissão por produto, com inclusão de várias vendas, escolha de 5% ou 15% para a promotora e resumo detalhado item por item.">
+  <title>Calculadora de Comissão</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-glow page-glow-one" aria-hidden="true"></div>
+  <div class="page-glow page-glow-two" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <header class="hero">
+      <p class="eyebrow">Comissões por produto</p>
+      <h1>Calculadora de Comissão</h1>
+      <p class="hero-copy">
+        Cada tipo de venda possui uma porcentagem própria. Configure a regra da promotora,
+        adicione quantas vendas precisar e acompanhe a comissão total com o cálculo de cada item.
+      </p>
+      <button
+        class="hero-button"
+        id="startCalculator"
+        type="button"
+        aria-controls="calculatorArea"
+        aria-expanded="false"
+      >
+        Iniciar calculadora de comissão
+      </button>
+      <p class="hero-note">Os cálculos são feitos no próprio navegador e funcionam offline.</p>
+    </header>
+
+    <section class="how-card" aria-labelledby="howTitle">
+      <div class="how-heading">
+        <p class="section-kicker">Como funciona</p>
+        <h2 id="howTitle">Três passos para chegar ao total</h2>
+        <p>O percentual usado aparece entre parênteses ao lado de cada tipo de venda.</p>
+      </div>
+
+      <div class="how-steps">
+        <article>
+          <span>1</span>
+          <div>
+            <strong>Defina a regra</strong>
+            <p>Escolha Emissora, Promotora ou Ambas e selecione 5% ou 15% para a promotora.</p>
+          </div>
+        </article>
+        <article>
+          <span>2</span>
+          <div>
+            <strong>Adicione as vendas</strong>
+            <p>Informe o valor, escolha o produto e inclua quantos itens forem necessários.</p>
+          </div>
+        </article>
+        <article>
+          <span>3</span>
+          <div>
+            <strong>Confira o resumo</strong>
+            <p>Veja o total vendido, a comissão total e a fórmula detalhada de cada venda.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <main class="calculator-area" id="calculatorArea" hidden>
+      <section class="card settings-card" aria-labelledby="settingsTitle">
+        <div class="section-heading">
+          <span class="step-number">1</span>
+          <div>
+            <p class="section-kicker">Configuração geral</p>
+            <h2 id="settingsTitle">Defina como a comissão será calculada</h2>
+            <p>Alterar uma opção abaixo recalcula automaticamente todas as vendas adicionadas.</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <fieldset class="choice-fieldset">
+            <legend>Comissão de quem?</legend>
+            <div class="segmented-options role-options">
+              <label>
+                <input type="radio" name="role" value="emissor">
+                <span>Emissora</span>
+              </label>
+              <label>
+                <input type="radio" name="role" value="promotor" checked>
+                <span>Promotora</span>
+              </label>
+              <label>
+                <input type="radio" name="role" value="ambos">
+                <span>Ambas</span>
+              </label>
+            </div>
+            <p class="field-help" id="roleHelp">O percentual exibido nos produtos corresponde à comissão da promotora.</p>
+          </fieldset>
+
+          <fieldset class="choice-fieldset promoter-setting">
+            <legend>Percentual da promotora</legend>
+            <div class="segmented-options promoter-options">
+              <label>
+                <input type="radio" name="promoterRate" value="5">
+                <span>5%</span>
+              </label>
+              <label>
+                <input type="radio" name="promoterRate" value="15" checked>
+                <span>15%</span>
+              </label>
+            </div>
+            <p class="field-help">Aplicado somente aos produtos que têm 5% no mapa. Produtos com 0% continuam em 0%.</p>
+          </fieldset>
+        </div>
+
+        <div class="product-rule-note" role="note">
+          <strong>As comissões variam de acordo com o produto.</strong>
+          <p>
+            Ao abrir “Tipo de venda”, observe a porcentagem entre parênteses. Esse é o percentual
+            que será aplicado ao valor daquela venda conforme as configurações escolhidas acima.
+          </p>
+        </div>
+      </section>
+
+      <div class="workspace-grid">
+        <form class="card sale-form-card" id="saleForm" novalidate>
+          <div class="section-heading">
+            <span class="step-number">2</span>
+            <div>
+              <p class="section-kicker">Nova venda</p>
+              <h2 id="saleFormTitle">Adicione uma venda</h2>
+              <p>Depois de adicionar, o item entra no detalhamento e no total.</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="saleValue">Valor da venda</label>
+            <div class="currency-control">
+              <span aria-hidden="true">R$</span>
+              <input
+                id="saleValue"
+                name="saleValue"
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder="0,00"
+                aria-describedby="saleValueHint saleValueError"
+              >
+            </div>
+            <p class="field-hint" id="saleValueHint">Exemplo: 1.250,00</p>
+            <p class="field-error" id="saleValueError" hidden>Informe um valor maior que zero.</p>
+          </div>
+
+          <div class="field">
+            <label for="saleType">Tipo de venda</label>
+            <div class="select-wrap">
+              <select id="saleType" name="saleType" required aria-describedby="saleTypeHint"></select>
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+              </svg>
+            </div>
+            <p class="field-hint" id="saleTypeHint">A porcentagem entre parênteses é a usada nesta venda.</p>
+          </div>
+
+          <div class="rate-preview" aria-live="polite">
+            <div>
+              <span>Percentual deste produto</span>
+              <strong id="currentProductName">Bilhete Internacional</strong>
+              <small id="currentProductMeta">BILI · Internacional · Bilhete</small>
+            </div>
+            <b id="currentProductRate">15%</b>
+          </div>
+
+          <div class="form-actions">
+            <button class="primary-button" id="submitSaleButton" type="submit">Adicionar venda à lista</button>
+            <button class="secondary-button" id="cancelEditButton" type="button" hidden>Cancelar edição</button>
+            <button class="ghost-button" id="clearFormButton" type="button">Limpar campos</button>
+          </div>
+        </form>
+
+        <aside class="card summary-card" aria-labelledby="summaryTitle" aria-live="polite">
+          <div class="summary-heading">
+            <div>
+              <p class="section-kicker">Resumo automático</p>
+              <h2 id="summaryTitle">Comissão total</h2>
+              <p id="summaryRuleLabel">Comissão da promotora</p>
+            </div>
+            <span class="summary-count" id="summaryCount">0 vendas</span>
+          </div>
+
+          <div class="total-amount" id="totalCommission">R$ 0,00</div>
+          <p class="total-caption" id="totalCaption">Adicione a primeira venda para iniciar o cálculo.</p>
+
+          <div class="summary-metrics">
+            <article>
+              <span>Total vendido</span>
+              <strong id="totalSalesValue">R$ 0,00</strong>
+            </article>
+            <article>
+              <span>Taxa média efetiva</span>
+              <strong id="averageRate">0%</strong>
+            </article>
+          </div>
+
+          <div class="component-breakdown">
+            <div>
+              <span>Total da emissora</span>
+              <strong id="totalIssuer">R$ 0,00</strong>
+            </div>
+            <div>
+              <span>Total da promotora</span>
+              <strong id="totalPromoter">R$ 0,00</strong>
+            </div>
+          </div>
+
+          <p class="summary-note">
+            A comissão total é a soma das comissões individuais mostradas na lista abaixo.
+          </p>
+
+          <div class="summary-actions">
+            <button class="copy-button" id="copySummaryButton" type="button" disabled>Copiar resumo detalhado</button>
+            <button class="danger-button" id="clearAllButton" type="button" disabled>Limpar todas as vendas</button>
+          </div>
+        </aside>
+      </div>
+
+      <section class="card sales-card" aria-labelledby="salesTitle">
+        <div class="sales-heading">
+          <div>
+            <p class="section-kicker">Detalhamento item por item</p>
+            <h2 id="salesTitle">Vendas adicionadas</h2>
+            <p>Cada linha mostra o valor da venda, a porcentagem aplicada, a fórmula e a comissão gerada.</p>
+          </div>
+          <span class="list-total" id="listTotal">0 itens</span>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+          <strong>Nenhuma venda adicionada ainda.</strong>
+          <p>Use o formulário acima para incluir a primeira venda.</p>
+        </div>
+
+        <div class="sales-list" id="salesList"></div>
+      </section>
+
+      <details class="card rate-card">
+        <summary>
+          <span>
+            <strong>Consultar tabela completa de percentuais</strong>
+            <small>A tabela acompanha a regra de 5% ou 15% escolhida para a promotora.</small>
+          </span>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+          </svg>
+        </summary>
+
+        <div class="table-content">
+          <label class="search-control" for="rateSearch">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle cx="8.5" cy="8.5" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+              <path d="m12.3 12.3 4 4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.6"/>
+            </svg>
+            <input id="rateSearch" type="search" placeholder="Buscar por produto, sigla ou categoria">
+          </label>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo de venda</th>
+                  <th>Sigla</th>
+                  <th>Categoria</th>
+                  <th>Emissora</th>
+                  <th>Promotora</th>
+                  <th>Percentual usado</th>
+                </tr>
+              </thead>
+              <tbody id="rateTableBody"></tbody>
+            </table>
+            <p class="empty-table-message" id="emptyTableMessage" hidden>Nenhum tipo encontrado.</p>
+          </div>
+        </div>
+      </details>
+    </main>
+
+    <footer>
+      <p>Calculadora configurada com os produtos do mapa de comissionamento fornecido.</p>
+      <p>Os percentuais são aplicados diretamente sobre o valor informado em cada venda.</p>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <noscript>
+    <div class="noscript-message">Ative o JavaScript para usar a calculadora de comissão.</div>
+  </noscript>
+
+  <script src="script.js"></script>
+</body>
+</html>
