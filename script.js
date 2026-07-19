@@ -79,6 +79,9 @@ const elements = {
   saleValue: document.querySelector("#saleValue"),
   saleValueControl: document.querySelector(".currency-control"),
   saleValueError: document.querySelector("#saleValueError"),
+  agencyRate: document.querySelector("#agencyRate"),
+  agencyRateControl: document.querySelector(".percent-control"),
+  agencyRateError: document.querySelector("#agencyRateError"),
   saleType: document.querySelector("#saleType"),
   currentProductName: document.querySelector("#currentProductName"),
   currentProductMeta: document.querySelector("#currentProductMeta"),
@@ -91,9 +94,11 @@ const elements = {
   totalCommission: document.querySelector("#totalCommission"),
   totalCaption: document.querySelector("#totalCaption"),
   totalSalesValue: document.querySelector("#totalSalesValue"),
+  totalAgencyGain: document.querySelector("#totalAgencyGain"),
   averageRate: document.querySelector("#averageRate"),
   totalIssuer: document.querySelector("#totalIssuer"),
   totalPromoter: document.querySelector("#totalPromoter"),
+  savePdfButton: document.querySelector("#savePdfButton"),
   copySummaryButton: document.querySelector("#copySummaryButton"),
   clearAllButton: document.querySelector("#clearAllButton"),
   listTotal: document.querySelector("#listTotal"),
@@ -167,6 +172,15 @@ function parseCurrency(value) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
+function parsePercent(value) {
+  const parsed = Number.parseFloat(String(value || "").replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatPercentInput(value) {
+  return String(Number.isFinite(value) ? value : 10).replace(",", ".");
+}
+
 function getProduct(code) {
   return products.find((product) => product.code === code) || products.find((product) => product.code === "BILI") || products[0];
 }
@@ -193,9 +207,11 @@ function getRoleLabel(role = state.role) {
 
 function calculateSale(sale) {
   const product = getProduct(sale.productCode);
+  const agencyRate = Number.isFinite(sale.agencyRate) ? sale.agencyRate : 10;
+  const agencyGain = sale.value * (agencyRate / 100);
   const promoterRate = getPromoterRate(product);
-  const issuerCommission = sale.value * (product.issuerRate / 100);
-  const promoterCommission = sale.value * (promoterRate / 100);
+  const issuerCommission = agencyGain * (product.issuerRate / 100);
+  const promoterCommission = agencyGain * (promoterRate / 100);
   const combinedCommission = issuerCommission + promoterCommission;
   const selectedRate = getSelectedRate(product);
 
@@ -205,6 +221,8 @@ function calculateSale(sale) {
 
   return {
     product,
+    agencyRate,
+    agencyGain,
     promoterRate,
     issuerCommission,
     promoterCommission,
@@ -218,12 +236,14 @@ function getTotals() {
   return state.sales.reduce((totals, sale) => {
     const calculation = calculateSale(sale);
     totals.salesValue += sale.value;
+    totals.agencyGain += calculation.agencyGain;
     totals.issuer += calculation.issuerCommission;
     totals.promoter += calculation.promoterCommission;
     totals.selected += calculation.selectedCommission;
     return totals;
   }, {
     salesValue: 0,
+    agencyGain: 0,
     issuer: 0,
     promoter: 0,
     selected: 0
@@ -241,6 +261,12 @@ function setValueError(show) {
   elements.saleValueError.hidden = !show;
   elements.saleValueControl.classList.toggle("invalid", show);
   elements.saleValue.setAttribute("aria-invalid", String(show));
+}
+
+function setAgencyRateError(show) {
+  elements.agencyRateError.hidden = !show;
+  elements.agencyRateControl.classList.toggle("invalid", show);
+  elements.agencyRate.setAttribute("aria-invalid", String(show));
 }
 
 function populateSaleTypes() {
@@ -332,7 +358,7 @@ function renderRateTable(filter = elements.rateSearch.value) {
 
 function getComponentDetail(calculation) {
   if (state.role === "ambos") {
-    return `Emissora: ${formatRate(calculation.product.issuerRate)} = ${formatCurrency(calculation.issuerCommission)} · Promotora: ${formatRate(calculation.promoterRate)} = ${formatCurrency(calculation.promoterCommission)}`;
+    return `Base da comissão: ${formatCurrency(calculation.agencyGain)} · Emissora: ${formatRate(calculation.product.issuerRate)} = ${formatCurrency(calculation.issuerCommission)} · Promotora: ${formatRate(calculation.promoterRate)} = ${formatCurrency(calculation.promoterCommission)}`;
   }
 
   if (state.role === "emissor") {
@@ -370,13 +396,14 @@ function renderSales() {
 
       <div class="sale-formula">
         <span>Como foi calculado</span>
-        <strong>${formatCurrency(sale.value)} × ${formatRate(calculation.selectedRate)} = ${formatCurrency(calculation.selectedCommission)}</strong>
+        <strong>${formatCurrency(sale.value)} × ${formatRate(calculation.agencyRate)} = ${formatCurrency(calculation.agencyGain)} × ${formatRate(calculation.selectedRate)} = ${formatCurrency(calculation.selectedCommission)}</strong>
         <small>${getComponentDetail(calculation)}</small>
       </div>
 
       <div class="sale-value-block">
-        <span>Valor da venda</span>
+        <span>Venda / ganho agência</span>
         <strong>${formatCurrency(sale.value)}</strong>
+        <small>${formatRate(calculation.agencyRate)} = ${formatCurrency(calculation.agencyGain)}</small>
       </div>
 
       <div class="sale-commission-block">
@@ -406,9 +433,11 @@ function updateSummary() {
   elements.summaryCount.textContent = `${count} ${count === 1 ? "venda" : "vendas"}`;
   elements.totalCommission.textContent = formatCurrency(totals.selected);
   elements.totalSalesValue.textContent = formatCurrency(totals.salesValue);
+  elements.totalAgencyGain.textContent = formatCurrency(totals.agencyGain);
   elements.averageRate.textContent = formatRate(averageRate);
   elements.totalIssuer.textContent = formatCurrency(totals.issuer);
   elements.totalPromoter.textContent = formatCurrency(totals.promoter);
+  elements.savePdfButton.disabled = count === 0;
   elements.copySummaryButton.disabled = count === 0;
   elements.clearAllButton.disabled = count === 0;
 
@@ -427,13 +456,18 @@ function refreshAllCalculations() {
   renderRateTable();
 }
 
-function resetForm({ preserveProduct = true, focus = true } = {}) {
+function resetForm({ preserveProduct = true, preserveAgencyRate = true, focus = true } = {}) {
   state.editingId = null;
   elements.saleValue.value = "";
   setValueError(false);
+  setAgencyRateError(false);
 
   if (!preserveProduct) {
     elements.saleType.value = "BILI";
+  }
+
+  if (!preserveAgencyRate) {
+    elements.agencyRate.value = "10";
   }
 
   elements.saleFormTitle.textContent = "Adicione uma venda";
@@ -456,11 +490,19 @@ function formatInputOnBlur() {
 function addOrUpdateSale(event) {
   event.preventDefault();
   const value = parseCurrency(elements.saleValue.value);
+  const agencyRate = parsePercent(elements.agencyRate.value);
 
   if (value <= 0) {
     setValueError(true);
     elements.saleValue.focus();
     showToast("Informe um valor de venda maior que zero.");
+    return;
+  }
+
+  if (agencyRate < 7 || agencyRate > 40) {
+    setAgencyRateError(true);
+    elements.agencyRate.focus();
+    showToast("Informe o ganho da agência entre 7% e 40%.");
     return;
   }
 
@@ -470,6 +512,7 @@ function addOrUpdateSale(event) {
     const sale = state.sales.find((item) => item.id === state.editingId);
     if (sale) {
       sale.value = value;
+      sale.agencyRate = agencyRate;
       sale.productCode = productCode;
       showToast("Venda atualizada.");
     }
@@ -478,12 +521,12 @@ function addOrUpdateSale(event) {
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-    state.sales.push({ id, value, productCode });
+    state.sales.push({ id, value, agencyRate, productCode });
     showToast("Venda adicionada ao total.");
   }
 
   renderSales();
-  resetForm({ preserveProduct: true, focus: true });
+  resetForm({ preserveProduct: true, preserveAgencyRate: true, focus: true });
 }
 
 function editSale(id) {
@@ -492,11 +535,13 @@ function editSale(id) {
 
   state.editingId = id;
   elements.saleValue.value = inputNumberFormatter.format(sale.value);
+  elements.agencyRate.value = formatPercentInput(sale.agencyRate);
   elements.saleType.value = sale.productCode;
   elements.saleFormTitle.textContent = "Edite a venda selecionada";
   elements.submitSaleButton.textContent = "Salvar alteração";
   elements.cancelEditButton.hidden = false;
   setValueError(false);
+  setAgencyRateError(false);
   updateProductPreview();
 
   elements.saleForm.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -510,7 +555,7 @@ function removeSale(id) {
   state.sales.splice(saleIndex, 1);
 
   if (state.editingId === id) {
-    resetForm({ preserveProduct: true, focus: false });
+    resetForm({ preserveProduct: true, preserveAgencyRate: true, focus: false });
   }
 
   renderSales();
@@ -524,7 +569,7 @@ function clearAllSales() {
   if (!confirmed) return;
 
   state.sales = [];
-  resetForm({ preserveProduct: false, focus: false });
+  resetForm({ preserveProduct: false, preserveAgencyRate: false, focus: false });
   renderSales();
   showToast("Todas as vendas foram removidas.");
 }
@@ -535,13 +580,15 @@ function buildSummaryText() {
     "RESUMO DA CALCULADORA DE COMISSÃO",
     `Regra selecionada: ${getRoleLabel()}`,
     `Percentual da promotora nos produtos de 5%: ${formatRate(state.promoterRate)}`,
+    "Comissão calculada sobre o ganho da agência, não sobre o valor total da venda.",
     ""
   ];
 
   state.sales.forEach((sale, index) => {
     const calculation = calculateSale(sale);
     lines.push(`${index + 1}. ${calculation.product.description} (${formatRate(calculation.selectedRate)})`);
-    lines.push(`   ${formatCurrency(sale.value)} × ${formatRate(calculation.selectedRate)} = ${formatCurrency(calculation.selectedCommission)}`);
+    lines.push(`   Venda: ${formatCurrency(sale.value)} | Ganho da agência: ${formatRate(calculation.agencyRate)} = ${formatCurrency(calculation.agencyGain)}`);
+    lines.push(`   Comissão: ${formatCurrency(calculation.agencyGain)} × ${formatRate(calculation.selectedRate)} = ${formatCurrency(calculation.selectedCommission)}`);
 
     if (state.role === "ambos") {
       lines.push(`   Emissora: ${formatCurrency(calculation.issuerCommission)} | Promotora: ${formatCurrency(calculation.promoterCommission)}`);
@@ -551,11 +598,104 @@ function buildSummaryText() {
   lines.push("");
   lines.push(`Quantidade de vendas: ${state.sales.length}`);
   lines.push(`Total vendido: ${formatCurrency(totals.salesValue)}`);
+  lines.push(`Ganho total da agência: ${formatCurrency(totals.agencyGain)}`);
   lines.push(`Total da emissora: ${formatCurrency(totals.issuer)}`);
   lines.push(`Total da promotora: ${formatCurrency(totals.promoter)}`);
   lines.push(`COMISSÃO TOTAL: ${formatCurrency(totals.selected)}`);
 
   return lines.join("\n");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function buildPdfTableHtml() {
+  const totals = getTotals();
+  const rows = state.sales.map((sale, index) => {
+    const calculation = calculateSale(sale);
+
+    return `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${escapeHtml(calculation.product.description)}<br><small>${escapeHtml(calculation.product.code)} · ${escapeHtml(calculation.product.category)}</small></td>
+        <td>${formatCurrency(sale.value)}</td>
+        <td>${formatRate(calculation.agencyRate)}</td>
+        <td>${formatCurrency(calculation.agencyGain)}</td>
+        <td>${formatRate(calculation.selectedRate)}</td>
+        <td>${formatCurrency(calculation.selectedCommission)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Resumo de comissões</title>
+  <style>
+    @page { margin: 16mm; }
+    * { box-sizing: border-box; }
+    body { color: #14313b; font-family: Arial, sans-serif; font-size: 12px; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    p { margin: 0; color: #52686e; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 18px 0; }
+    .summary div { border: 1px solid #d9e6e3; border-radius: 8px; padding: 9px; }
+    .summary span { display: block; color: #667d83; font-size: 10px; text-transform: uppercase; }
+    .summary strong { display: block; margin-top: 4px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; border: 1px solid #d9e6e3; text-align: left; vertical-align: top; }
+    th { background: #edf4f2; font-size: 10px; text-transform: uppercase; }
+    small { color: #667d83; }
+    .right { text-align: right; }
+  </style>
+</head>
+<body>
+  <h1>Tabela de vendas e comissões</h1>
+  <p>Regra: ${escapeHtml(getRoleLabel())}. A comissão é calculada sobre o ganho da agência.</p>
+  <section class="summary">
+    <div><span>Vendas</span><strong>${state.sales.length}</strong></div>
+    <div><span>Total vendido</span><strong>${formatCurrency(totals.salesValue)}</strong></div>
+    <div><span>Ganho agência</span><strong>${formatCurrency(totals.agencyGain)}</strong></div>
+    <div><span>Comissão total</span><strong>${formatCurrency(totals.selected)}</strong></div>
+  </section>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Venda</th>
+        <th>Valor total</th>
+        <th>% agência</th>
+        <th>Ganho agência</th>
+        <th>% comissão</th>
+        <th>Comissão</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`;
+}
+
+function saveTableAsPdf() {
+  if (state.sales.length === 0) return;
+
+  const printWindow = window.open("", "_blank", "width=980,height=720");
+  if (!printWindow) {
+    showToast("Permita pop-ups para gerar o PDF.");
+    return;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(buildPdfTableHtml());
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.setTimeout(() => printWindow.print(), 250);
+  showToast("Escolha “Salvar como PDF” na janela de impressão.");
 }
 
 async function copyText(text) {
@@ -619,13 +759,18 @@ function initialize() {
   elements.saleValue.addEventListener("input", () => {
     if (parseCurrency(elements.saleValue.value) > 0) setValueError(false);
   });
+  elements.agencyRate.addEventListener("input", () => {
+    const agencyRate = parsePercent(elements.agencyRate.value);
+    if (agencyRate >= 7 && agencyRate <= 40) setAgencyRateError(false);
+  });
   elements.saleValue.addEventListener("blur", formatInputOnBlur);
   elements.saleValue.addEventListener("focus", () => elements.saleValue.select());
   elements.roleInputs.forEach((input) => input.addEventListener("change", handleSettingsChange));
   elements.promoterRateInputs.forEach((input) => input.addEventListener("change", handleSettingsChange));
-  elements.cancelEditButton.addEventListener("click", () => resetForm({ preserveProduct: true, focus: true }));
-  elements.clearFormButton.addEventListener("click", () => resetForm({ preserveProduct: false, focus: true }));
+  elements.cancelEditButton.addEventListener("click", () => resetForm({ preserveProduct: true, preserveAgencyRate: true, focus: true }));
+  elements.clearFormButton.addEventListener("click", () => resetForm({ preserveProduct: false, preserveAgencyRate: false, focus: true }));
   elements.clearAllButton.addEventListener("click", clearAllSales);
+  elements.savePdfButton.addEventListener("click", saveTableAsPdf);
   elements.copySummaryButton.addEventListener("click", copySummary);
   elements.rateSearch.addEventListener("input", (event) => renderRateTable(event.target.value));
 

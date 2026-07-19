@@ -518,7 +518,8 @@ p {
   position: relative;
 }
 
-.currency-control {
+.currency-control,
+.percent-control {
   display: flex;
   align-items: center;
   min-height: 60px;
@@ -530,6 +531,7 @@ p {
 }
 
 .currency-control:focus-within,
+.percent-control:focus-within,
 .select-wrap:focus-within,
 .search-control:focus-within {
   border-color: rgba(13, 117, 110, 0.6);
@@ -537,12 +539,14 @@ p {
   box-shadow: var(--focus);
 }
 
-.currency-control.invalid {
+.currency-control.invalid,
+.percent-control.invalid {
   border-color: rgba(156, 60, 60, 0.65);
   box-shadow: 0 0 0 4px rgba(156, 60, 60, 0.1);
 }
 
-.currency-control > span {
+.currency-control > span,
+.percent-control > span {
   display: grid;
   align-self: stretch;
   min-width: 58px;
@@ -553,7 +557,13 @@ p {
   font-weight: 850;
 }
 
-.currency-control input {
+.percent-control > span {
+  border-right: 0;
+  border-left: 1px solid var(--line);
+}
+
+.currency-control input,
+.percent-control input {
   width: 100%;
   min-width: 0;
   padding: 14px 16px;
@@ -565,7 +575,8 @@ p {
   font-weight: 790;
 }
 
-.currency-control input::placeholder {
+.currency-control input::placeholder,
+.percent-control input::placeholder {
   color: #a7b8bb;
 }
 
@@ -759,7 +770,7 @@ p {
 
 .summary-metrics {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
   gap: 10px;
 }
 
@@ -869,7 +880,7 @@ p {
 
 .sale-item {
   display: grid;
-  grid-template-columns: minmax(230px, 1.15fr) minmax(230px, 1.18fr) minmax(105px, 0.48fr) minmax(120px, 0.55fr) auto;
+  grid-template-columns: minmax(230px, 1.05fr) minmax(280px, 1.35fr) minmax(145px, 0.55fr) minmax(120px, 0.5fr) auto;
   gap: 14px;
   align-items: center;
   padding: 18px;
@@ -967,6 +978,14 @@ p {
 .sale-commission-block strong {
   overflow: hidden;
   font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sale-value-block small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.69rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1226,6 +1245,7 @@ footer p {
 .copy-button:focus-visible,
 .danger-button:focus-visible,
 .item-action:focus-visible,
+.percent-control:focus-within,
 summary:focus-visible {
   outline: 0;
   box-shadow: var(--focus);
@@ -1246,7 +1266,7 @@ summary:focus-visible {
   }
 
   .sale-item {
-    grid-template-columns: minmax(230px, 1.05fr) minmax(230px, 1fr) minmax(110px, 0.48fr) minmax(120px, 0.55fr);
+    grid-template-columns: minmax(230px, 1fr) minmax(230px, 1fr) minmax(130px, 0.55fr) minmax(120px, 0.55fr);
   }
 
   .sale-actions {

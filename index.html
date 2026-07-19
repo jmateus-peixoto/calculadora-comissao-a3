@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#12394a">
-  <meta name="description" content="Calculadora de comissão por produto, com inclusão de várias vendas, escolha de 5% ou 15% para a promotora e resumo detalhado item por item.">
+  <meta name="description" content="Calculadora de comissão por produto, com ganho da agência por venda, inclusão de várias vendas e resumo detalhado item por item.">
   <title>Calculadora de Comissão</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -17,8 +17,8 @@
       <p class="eyebrow">Comissões por produto</p>
       <h1>Calculadora de Comissão</h1>
       <p class="hero-copy">
-        Cada tipo de venda possui uma porcentagem própria. Configure a regra da promotora,
-        adicione quantas vendas precisar e acompanhe a comissão total com o cálculo de cada item.
+        Cada venda possui um percentual de ganho da agência. A comissão é calculada sobre esse
+        ganho, respeitando o percentual do produto e a regra selecionada.
       </p>
       <button
         class="hero-button"
@@ -51,14 +51,14 @@
           <span>2</span>
           <div>
             <strong>Adicione as vendas</strong>
-            <p>Informe o valor, escolha o produto e inclua quantos itens forem necessários.</p>
+            <p>Informe o valor total, o ganho da agência entre 7% e 40% e escolha o produto.</p>
           </div>
         </article>
         <article>
           <span>3</span>
           <div>
             <strong>Confira o resumo</strong>
-            <p>Veja o total vendido, a comissão total e a fórmula detalhada de cada venda.</p>
+            <p>Veja o total vendido, o ganho da agência, a comissão total e a fórmula de cada venda.</p>
           </div>
         </article>
       </div>
@@ -150,6 +150,26 @@
           </div>
 
           <div class="field">
+            <label for="agencyRate">Ganho da agência sobre a venda</label>
+            <div class="percent-control">
+              <input
+                id="agencyRate"
+                name="agencyRate"
+                type="number"
+                inputmode="decimal"
+                min="7"
+                max="40"
+                step="0.01"
+                value="10"
+                aria-describedby="agencyRateHint agencyRateError"
+              >
+              <span aria-hidden="true">%</span>
+            </div>
+            <p class="field-hint" id="agencyRateHint">Use um percentual entre 7% e 40%.</p>
+            <p class="field-error" id="agencyRateError" hidden>Informe um percentual entre 7% e 40%.</p>
+          </div>
+
+          <div class="field">
             <label for="saleType">Tipo de venda</label>
             <div class="select-wrap">
               <select id="saleType" name="saleType" required aria-describedby="saleTypeHint"></select>
@@ -195,6 +215,10 @@
               <strong id="totalSalesValue">R$ 0,00</strong>
             </article>
             <article>
+              <span>Ganho da agência</span>
+              <strong id="totalAgencyGain">R$ 0,00</strong>
+            </article>
+            <article>
               <span>Taxa média efetiva</span>
               <strong id="averageRate">0%</strong>
             </article>
@@ -216,6 +240,7 @@
           </p>
 
           <div class="summary-actions">
+            <button class="copy-button pdf-button" id="savePdfButton" type="button" disabled>Salvar tabela em PDF</button>
             <button class="copy-button" id="copySummaryButton" type="button" disabled>Copiar resumo detalhado</button>
             <button class="danger-button" id="clearAllButton" type="button" disabled>Limpar todas as vendas</button>
           </div>
@@ -227,7 +252,7 @@
           <div>
             <p class="section-kicker">Detalhamento item por item</p>
             <h2 id="salesTitle">Vendas adicionadas</h2>
-            <p>Cada linha mostra o valor da venda, a porcentagem aplicada, a fórmula e a comissão gerada.</p>
+            <p>Cada linha mostra o valor total, o ganho da agência, a fórmula e a comissão gerada.</p>
           </div>
           <span class="list-total" id="listTotal">0 itens</span>
         </div>
@@ -282,7 +307,7 @@
 
     <footer>
       <p>Calculadora configurada com os produtos do mapa de comissionamento fornecido.</p>
-      <p>Os percentuais são aplicados diretamente sobre o valor informado em cada venda.</p>
+      <p>Os percentuais de comissão são aplicados sobre o ganho da agência em cada venda.</p>
     </footer>
   </div>
 
