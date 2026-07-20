@@ -47,6 +47,8 @@ const products = [
 const state = {
   role: "promotor",
   promoterRate: 15,
+  periodStart: "",
+  periodEnd: "",
   sales: [],
   editingId: null
 };
@@ -73,6 +75,9 @@ const elements = {
   calculatorArea: document.querySelector("#calculatorArea"),
   roleInputs: [...document.querySelectorAll('input[name="role"]')],
   promoterRateInputs: [...document.querySelectorAll('input[name="promoterRate"]')],
+  periodStart: document.querySelector("#periodStart"),
+  periodEnd: document.querySelector("#periodEnd"),
+  periodError: document.querySelector("#periodError"),
   roleHelp: document.querySelector("#roleHelp"),
   saleForm: document.querySelector("#saleForm"),
   saleFormTitle: document.querySelector("#saleFormTitle"),
@@ -93,6 +98,7 @@ const elements = {
   cancelEditButton: document.querySelector("#cancelEditButton"),
   clearFormButton: document.querySelector("#clearFormButton"),
   summaryRuleLabel: document.querySelector("#summaryRuleLabel"),
+  summaryPeriodLabel: document.querySelector("#summaryPeriodLabel"),
   summaryCount: document.querySelector("#summaryCount"),
   totalCommission: document.querySelector("#totalCommission"),
   totalCaption: document.querySelector("#totalCaption"),
@@ -121,6 +127,30 @@ function formatCurrency(value) {
 
 function formatRate(value) {
   return `${numberFormatter.format(Number.isFinite(value) ? value : 0)}%`;
+}
+
+function formatDate(value) {
+  if (!value || typeof value !== "string") return "";
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return "";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(new Date(year, month - 1, day));
+}
+
+function getPeriodLabel() {
+  if (!state.periodStart || !state.periodEnd) return "Período não selecionado";
+  const startLabel = formatDate(state.periodStart);
+  const endLabel = formatDate(state.periodEnd);
+  if (!startLabel || !endLabel) return "Período não selecionado";
+  if (state.periodStart === state.periodEnd) return startLabel;
+  return `${startLabel} a ${endLabel}`;
+}
+
+function isValidPeriod() {
+  return Boolean(state.periodStart && state.periodEnd && state.periodStart <= state.periodEnd);
 }
 
 function normalizeSearch(value) {
@@ -283,6 +313,14 @@ function setSaleNumberError(show) {
   elements.saleNumber.setAttribute("aria-invalid", String(show));
 }
 
+function setPeriodError(show) {
+  elements.periodError.hidden = !show;
+  elements.periodStart.closest(".date-control").classList.toggle("invalid", show);
+  elements.periodEnd.closest(".date-control").classList.toggle("invalid", show);
+  elements.periodStart.setAttribute("aria-invalid", String(show));
+  elements.periodEnd.setAttribute("aria-invalid", String(show));
+}
+
 function populateSaleTypes() {
   const previousCode = elements.saleType.value || "BILI";
   const classifications = [...new Set(products.map((product) => product.classification))];
@@ -333,6 +371,7 @@ function updateSettingsCopy() {
 
   elements.roleHelp.textContent = messages[state.role];
   elements.summaryRuleLabel.textContent = getRoleLabel();
+  elements.summaryPeriodLabel.textContent = getPeriodLabel();
 }
 
 function renderRateTable(filter = elements.rateSearch.value) {
@@ -404,7 +443,7 @@ function renderSales() {
         <span class="sale-index">Venda<br>${index + 1}</span>
         <div>
           <h3>${calculation.product.description} <span>(${formatRate(calculation.selectedRate)})</span></h3>
-          <p>Venda nº ${sale.saleNumber || index + 1} · ${calculation.product.code} · ${calculation.product.category} · ${calculation.product.classification} · ${getRoleLabel()}</p>
+          <p>Venda nº ${sale.saleNumber || index + 1} · Período: ${getPeriodLabel()} · ${calculation.product.code} · ${calculation.product.category} · ${calculation.product.classification} · ${getRoleLabel()}</p>
         </div>
       </div>
 
@@ -509,6 +548,13 @@ function addOrUpdateSale(event) {
   const agencyRate = parsePercent(elements.agencyRate.value);
   const saleNumber = parseSaleNumber(elements.saleNumber.value);
 
+  if (!isValidPeriod()) {
+    setPeriodError(true);
+    elements.periodStart.focus();
+    showToast("Selecione um período válido para as vendas.");
+    return;
+  }
+
   if (value <= 0) {
     setValueError(true);
     elements.saleValue.focus();
@@ -605,6 +651,7 @@ function buildSummaryText() {
   const totals = getTotals();
   const lines = [
     "RESUMO DA CALCULADORA DE COMISSÃO",
+    `Período das vendas: ${getPeriodLabel()}`,
     `Regra selecionada: ${getRoleLabel()}`,
     `Percentual da promotora nos produtos de 5%: ${formatRate(state.promoterRate)}`,
     "Comissão calculada sobre o ganho da agência, não sobre o valor total da venda.",
@@ -614,6 +661,7 @@ function buildSummaryText() {
   state.sales.forEach((sale, index) => {
     const calculation = calculateSale(sale);
     lines.push(`${index + 1}. Venda nº ${sale.saleNumber || index + 1} - ${calculation.product.description} (${formatRate(calculation.selectedRate)})`);
+    lines.push(`   Período: ${getPeriodLabel()}`);
     lines.push(`   Venda: ${formatCurrency(sale.value)} | Ganho da agência: ${formatRate(calculation.agencyRate)} = ${formatCurrency(calculation.agencyGain)}`);
     lines.push(`   Comissão: ${formatCurrency(calculation.agencyGain)} × ${formatRate(calculation.selectedRate)} = ${formatCurrency(calculation.selectedCommission)}`);
 
@@ -650,6 +698,7 @@ function buildPdfTableHtml() {
       <tr>
         <td>${index + 1}</td>
         <td>${sale.saleNumber || index + 1}</td>
+        <td>${escapeHtml(getPeriodLabel())}</td>
         <td>${escapeHtml(calculation.product.description)}<br><small>${escapeHtml(calculation.product.code)} · ${escapeHtml(calculation.product.category)}</small></td>
         <td>${formatCurrency(sale.value)}</td>
         <td>${formatRate(calculation.agencyRate)}</td>
@@ -684,7 +733,7 @@ function buildPdfTableHtml() {
 </head>
 <body>
   <h1>Tabela de vendas e comissões</h1>
-  <p>Regra: ${escapeHtml(getRoleLabel())}. A comissão é calculada sobre o ganho da agência.</p>
+  <p>Período: ${escapeHtml(getPeriodLabel())}. Regra: ${escapeHtml(getRoleLabel())}. A comissão é calculada sobre o ganho da agência.</p>
   <section class="summary">
     <div><span>Vendas</span><strong>${state.sales.length}</strong></div>
     <div><span>Total vendido</span><strong>${formatCurrency(totals.salesValue)}</strong></div>
@@ -696,6 +745,7 @@ function buildPdfTableHtml() {
       <tr>
         <th>#</th>
         <th>Nº venda</th>
+        <th>Período</th>
         <th>Venda</th>
         <th>Valor total</th>
         <th>% agência</th>
@@ -766,13 +816,24 @@ function startCalculator() {
   }
 
   elements.calculatorArea.scrollIntoView({ behavior: "smooth", block: "start" });
-  window.setTimeout(() => elements.saleValue.focus(), wasHidden ? 450 : 250);
+  window.setTimeout(() => {
+    const focusTarget = isValidPeriod() ? elements.saleValue : elements.periodStart;
+    focusTarget.focus();
+  }, wasHidden ? 450 : 250);
 }
 
 function handleSettingsChange() {
   state.role = elements.roleInputs.find((input) => input.checked)?.value || "promotor";
   state.promoterRate = Number(elements.promoterRateInputs.find((input) => input.checked)?.value || 15);
   refreshAllCalculations();
+}
+
+function handlePeriodChange() {
+  state.periodStart = elements.periodStart.value;
+  state.periodEnd = elements.periodEnd.value;
+  setPeriodError(false);
+  updateSettingsCopy();
+  renderSales();
 }
 
 function initialize() {
@@ -783,6 +844,8 @@ function initialize() {
   renderRateTable();
 
   elements.startCalculator.addEventListener("click", startCalculator);
+  elements.periodStart.addEventListener("change", handlePeriodChange);
+  elements.periodEnd.addEventListener("change", handlePeriodChange);
   elements.saleForm.addEventListener("submit", addOrUpdateSale);
   elements.saleType.addEventListener("change", updateProductPreview);
   elements.saleValue.addEventListener("input", () => {

@@ -528,6 +528,7 @@ p {
 }
 
 .currency-control,
+.date-control,
 .number-control,
 .percent-control {
   display: flex;
@@ -541,6 +542,7 @@ p {
 }
 
 .currency-control:focus-within,
+.date-control:focus-within,
 .number-control:focus-within,
 .percent-control:focus-within,
 .select-wrap:focus-within,
@@ -551,6 +553,7 @@ p {
 }
 
 .currency-control.invalid,
+.date-control.invalid,
 .number-control.invalid,
 .percent-control.invalid {
   border-color: rgba(156, 60, 60, 0.65);
@@ -575,6 +578,7 @@ p {
 }
 
 .currency-control input,
+.date-control input,
 .number-control input,
 .percent-control input {
   width: 100%;
@@ -589,9 +593,45 @@ p {
 }
 
 .currency-control input::placeholder,
+.date-control input::placeholder,
 .number-control input::placeholder,
 .percent-control input::placeholder {
   color: #a7b8bb;
+}
+
+.period-fieldset {
+  margin: 0 0 20px;
+  padding: 18px 18px 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.period-fieldset legend {
+  padding: 0 7px;
+  color: var(--navy);
+  font-size: 0.86rem;
+  font-weight: 820;
+}
+
+.period-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.period-grid .field {
+  margin-bottom: 0;
+}
+
+.period-fieldset .field-help {
+  margin-top: 10px;
+}
+
+.summary-period {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
 }
 
 .select-wrap {
@@ -1259,6 +1299,7 @@ footer p {
 .copy-button:focus-visible,
 .danger-button:focus-visible,
 .item-action:focus-visible,
+.date-control:focus-within,
 .number-control:focus-within,
 .percent-control:focus-within,
 summary:focus-visible {
@@ -1325,6 +1366,10 @@ summary:focus-visible {
   }
 
   .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .period-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1491,8 +1536,8 @@ summary:focus-visible {
         <article>
           <span>1</span>
           <div>
-            <strong>Defina a regra</strong>
-            <p>Escolha Emissora, Promotora ou Ambas e selecione 5% ou 15% para a promotora.</p>
+            <strong>Defina o período e a regra</strong>
+            <p>Escolha o intervalo das vendas, Emissora, Promotora ou Ambas, e a regra da promotora.</p>
           </div>
         </article>
         <article>
@@ -1519,9 +1564,40 @@ summary:focus-visible {
           <div>
             <p class="section-kicker">Configuração geral</p>
             <h2 id="settingsTitle">Defina como a comissão será calculada</h2>
-            <p>Alterar uma opção abaixo recalcula automaticamente todas as vendas adicionadas.</p>
+            <p>Selecione o período das vendas e ajuste a regra de comissão.</p>
           </div>
         </div>
+
+        <fieldset class="period-fieldset">
+          <legend>Período das vendas</legend>
+          <div class="period-grid">
+            <div class="field">
+              <label for="periodStart">Data inicial</label>
+              <div class="date-control">
+                <input
+                  id="periodStart"
+                  name="periodStart"
+                  type="date"
+                  aria-describedby="periodError"
+                >
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="periodEnd">Data final</label>
+              <div class="date-control">
+                <input
+                  id="periodEnd"
+                  name="periodEnd"
+                  type="date"
+                  aria-describedby="periodError"
+                >
+              </div>
+            </div>
+          </div>
+          <p class="field-help">Esse período será incluído no detalhamento e no PDF.</p>
+          <p class="field-error" id="periodError" hidden>Selecione um período válido para as vendas.</p>
+        </fieldset>
 
         <div class="settings-grid">
           <fieldset class="choice-fieldset">
@@ -1669,6 +1745,7 @@ summary:focus-visible {
               <p class="section-kicker">Resumo automático</p>
               <h2 id="summaryTitle">Comissão total</h2>
               <p id="summaryRuleLabel">Comissão da promotora</p>
+              <p class="summary-period" id="summaryPeriodLabel">Período não selecionado</p>
             </div>
             <span class="summary-count" id="summaryCount">0 vendas</span>
           </div>
@@ -1834,6 +1911,8 @@ const products = [
 const state = {
   role: "promotor",
   promoterRate: 15,
+  periodStart: "",
+  periodEnd: "",
   sales: [],
   editingId: null
 };
@@ -1860,6 +1939,9 @@ const elements = {
   calculatorArea: document.querySelector("#calculatorArea"),
   roleInputs: [...document.querySelectorAll('input[name="role"]')],
   promoterRateInputs: [...document.querySelectorAll('input[name="promoterRate"]')],
+  periodStart: document.querySelector("#periodStart"),
+  periodEnd: document.querySelector("#periodEnd"),
+  periodError: document.querySelector("#periodError"),
   roleHelp: document.querySelector("#roleHelp"),
   saleForm: document.querySelector("#saleForm"),
   saleFormTitle: document.querySelector("#saleFormTitle"),
@@ -1880,6 +1962,7 @@ const elements = {
   cancelEditButton: document.querySelector("#cancelEditButton"),
   clearFormButton: document.querySelector("#clearFormButton"),
   summaryRuleLabel: document.querySelector("#summaryRuleLabel"),
+  summaryPeriodLabel: document.querySelector("#summaryPeriodLabel"),
   summaryCount: document.querySelector("#summaryCount"),
   totalCommission: document.querySelector("#totalCommission"),
   totalCaption: document.querySelector("#totalCaption"),
@@ -1908,6 +1991,30 @@ function formatCurrency(value) {
 
 function formatRate(value) {
   return `${numberFormatter.format(Number.isFinite(value) ? value : 0)}%`;
+}
+
+function formatDate(value) {
+  if (!value || typeof value !== "string") return "";
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return "";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(new Date(year, month - 1, day));
+}
+
+function getPeriodLabel() {
+  if (!state.periodStart || !state.periodEnd) return "Período não selecionado";
+  const startLabel = formatDate(state.periodStart);
+  const endLabel = formatDate(state.periodEnd);
+  if (!startLabel || !endLabel) return "Período não selecionado";
+  if (state.periodStart === state.periodEnd) return startLabel;
+  return `${startLabel} a ${endLabel}`;
+}
+
+function isValidPeriod() {
+  return Boolean(state.periodStart && state.periodEnd && state.periodStart <= state.periodEnd);
 }
 
 function normalizeSearch(value) {
@@ -2070,6 +2177,14 @@ function setSaleNumberError(show) {
   elements.saleNumber.setAttribute("aria-invalid", String(show));
 }
 
+function setPeriodError(show) {
+  elements.periodError.hidden = !show;
+  elements.periodStart.closest(".date-control").classList.toggle("invalid", show);
+  elements.periodEnd.closest(".date-control").classList.toggle("invalid", show);
+  elements.periodStart.setAttribute("aria-invalid", String(show));
+  elements.periodEnd.setAttribute("aria-invalid", String(show));
+}
+
 function populateSaleTypes() {
   const previousCode = elements.saleType.value || "BILI";
   const classifications = [...new Set(products.map((product) => product.classification))];
@@ -2120,6 +2235,7 @@ function updateSettingsCopy() {
 
   elements.roleHelp.textContent = messages[state.role];
   elements.summaryRuleLabel.textContent = getRoleLabel();
+  elements.summaryPeriodLabel.textContent = getPeriodLabel();
 }
 
 function renderRateTable(filter = elements.rateSearch.value) {
@@ -2191,7 +2307,7 @@ function renderSales() {
         <span class="sale-index">Venda<br>${index + 1}</span>
         <div>
           <h3>${calculation.product.description} <span>(${formatRate(calculation.selectedRate)})</span></h3>
-          <p>Venda nº ${sale.saleNumber || index + 1} · ${calculation.product.code} · ${calculation.product.category} · ${calculation.product.classification} · ${getRoleLabel()}</p>
+          <p>Venda nº ${sale.saleNumber || index + 1} · Período: ${getPeriodLabel()} · ${calculation.product.code} · ${calculation.product.category} · ${calculation.product.classification} · ${getRoleLabel()}</p>
         </div>
       </div>
 
@@ -2296,6 +2412,13 @@ function addOrUpdateSale(event) {
   const agencyRate = parsePercent(elements.agencyRate.value);
   const saleNumber = parseSaleNumber(elements.saleNumber.value);
 
+  if (!isValidPeriod()) {
+    setPeriodError(true);
+    elements.periodStart.focus();
+    showToast("Selecione um período válido para as vendas.");
+    return;
+  }
+
   if (value <= 0) {
     setValueError(true);
     elements.saleValue.focus();
@@ -2392,6 +2515,7 @@ function buildSummaryText() {
   const totals = getTotals();
   const lines = [
     "RESUMO DA CALCULADORA DE COMISSÃO",
+    `Período das vendas: ${getPeriodLabel()}`,
     `Regra selecionada: ${getRoleLabel()}`,
     `Percentual da promotora nos produtos de 5%: ${formatRate(state.promoterRate)}`,
     "Comissão calculada sobre o ganho da agência, não sobre o valor total da venda.",
@@ -2401,6 +2525,7 @@ function buildSummaryText() {
   state.sales.forEach((sale, index) => {
     const calculation = calculateSale(sale);
     lines.push(`${index + 1}. Venda nº ${sale.saleNumber || index + 1} - ${calculation.product.description} (${formatRate(calculation.selectedRate)})`);
+    lines.push(`   Período: ${getPeriodLabel()}`);
     lines.push(`   Venda: ${formatCurrency(sale.value)} | Ganho da agência: ${formatRate(calculation.agencyRate)} = ${formatCurrency(calculation.agencyGain)}`);
     lines.push(`   Comissão: ${formatCurrency(calculation.agencyGain)} × ${formatRate(calculation.selectedRate)} = ${formatCurrency(calculation.selectedCommission)}`);
 
@@ -2437,6 +2562,7 @@ function buildPdfTableHtml() {
       <tr>
         <td>${index + 1}</td>
         <td>${sale.saleNumber || index + 1}</td>
+        <td>${escapeHtml(getPeriodLabel())}</td>
         <td>${escapeHtml(calculation.product.description)}<br><small>${escapeHtml(calculation.product.code)} · ${escapeHtml(calculation.product.category)}</small></td>
         <td>${formatCurrency(sale.value)}</td>
         <td>${formatRate(calculation.agencyRate)}</td>
@@ -2471,7 +2597,7 @@ function buildPdfTableHtml() {
 </head>
 <body>
   <h1>Tabela de vendas e comissões</h1>
-  <p>Regra: ${escapeHtml(getRoleLabel())}. A comissão é calculada sobre o ganho da agência.</p>
+  <p>Período: ${escapeHtml(getPeriodLabel())}. Regra: ${escapeHtml(getRoleLabel())}. A comissão é calculada sobre o ganho da agência.</p>
   <section class="summary">
     <div><span>Vendas</span><strong>${state.sales.length}</strong></div>
     <div><span>Total vendido</span><strong>${formatCurrency(totals.salesValue)}</strong></div>
@@ -2483,6 +2609,7 @@ function buildPdfTableHtml() {
       <tr>
         <th>#</th>
         <th>Nº venda</th>
+        <th>Período</th>
         <th>Venda</th>
         <th>Valor total</th>
         <th>% agência</th>
@@ -2553,13 +2680,24 @@ function startCalculator() {
   }
 
   elements.calculatorArea.scrollIntoView({ behavior: "smooth", block: "start" });
-  window.setTimeout(() => elements.saleValue.focus(), wasHidden ? 450 : 250);
+  window.setTimeout(() => {
+    const focusTarget = isValidPeriod() ? elements.saleValue : elements.periodStart;
+    focusTarget.focus();
+  }, wasHidden ? 450 : 250);
 }
 
 function handleSettingsChange() {
   state.role = elements.roleInputs.find((input) => input.checked)?.value || "promotor";
   state.promoterRate = Number(elements.promoterRateInputs.find((input) => input.checked)?.value || 15);
   refreshAllCalculations();
+}
+
+function handlePeriodChange() {
+  state.periodStart = elements.periodStart.value;
+  state.periodEnd = elements.periodEnd.value;
+  setPeriodError(false);
+  updateSettingsCopy();
+  renderSales();
 }
 
 function initialize() {
@@ -2570,6 +2708,8 @@ function initialize() {
   renderRateTable();
 
   elements.startCalculator.addEventListener("click", startCalculator);
+  elements.periodStart.addEventListener("change", handlePeriodChange);
+  elements.periodEnd.addEventListener("change", handlePeriodChange);
   elements.saleForm.addEventListener("submit", addOrUpdateSale);
   elements.saleType.addEventListener("change", updateProductPreview);
   elements.saleValue.addEventListener("input", () => {

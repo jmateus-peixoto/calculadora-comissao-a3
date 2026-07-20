@@ -43,8 +43,8 @@
         <article>
           <span>1</span>
           <div>
-            <strong>Defina a regra</strong>
-            <p>Escolha Emissora, Promotora ou Ambas e selecione 5% ou 15% para a promotora.</p>
+            <strong>Defina o período e a regra</strong>
+            <p>Escolha o intervalo das vendas, Emissora, Promotora ou Ambas, e a regra da promotora.</p>
           </div>
         </article>
         <article>
@@ -71,9 +71,40 @@
           <div>
             <p class="section-kicker">Configuração geral</p>
             <h2 id="settingsTitle">Defina como a comissão será calculada</h2>
-            <p>Alterar uma opção abaixo recalcula automaticamente todas as vendas adicionadas.</p>
+            <p>Selecione o período das vendas e ajuste a regra de comissão.</p>
           </div>
         </div>
+
+        <fieldset class="period-fieldset">
+          <legend>Período das vendas</legend>
+          <div class="period-grid">
+            <div class="field">
+              <label for="periodStart">Data inicial</label>
+              <div class="date-control">
+                <input
+                  id="periodStart"
+                  name="periodStart"
+                  type="date"
+                  aria-describedby="periodError"
+                >
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="periodEnd">Data final</label>
+              <div class="date-control">
+                <input
+                  id="periodEnd"
+                  name="periodEnd"
+                  type="date"
+                  aria-describedby="periodError"
+                >
+              </div>
+            </div>
+          </div>
+          <p class="field-help">Esse período será incluído no detalhamento e no PDF.</p>
+          <p class="field-error" id="periodError" hidden>Selecione um período válido para as vendas.</p>
+        </fieldset>
 
         <div class="settings-grid">
           <fieldset class="choice-fieldset">
@@ -221,6 +252,7 @@
               <p class="section-kicker">Resumo automático</p>
               <h2 id="summaryTitle">Comissão total</h2>
               <p id="summaryRuleLabel">Comissão da promotora</p>
+              <p class="summary-period" id="summaryPeriodLabel">Período não selecionado</p>
             </div>
             <span class="summary-count" id="summaryCount">0 vendas</span>
           </div>

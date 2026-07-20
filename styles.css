@@ -519,6 +519,7 @@ p {
 }
 
 .currency-control,
+.date-control,
 .number-control,
 .percent-control {
   display: flex;
@@ -532,6 +533,7 @@ p {
 }
 
 .currency-control:focus-within,
+.date-control:focus-within,
 .number-control:focus-within,
 .percent-control:focus-within,
 .select-wrap:focus-within,
@@ -542,6 +544,7 @@ p {
 }
 
 .currency-control.invalid,
+.date-control.invalid,
 .number-control.invalid,
 .percent-control.invalid {
   border-color: rgba(156, 60, 60, 0.65);
@@ -566,6 +569,7 @@ p {
 }
 
 .currency-control input,
+.date-control input,
 .number-control input,
 .percent-control input {
   width: 100%;
@@ -580,9 +584,45 @@ p {
 }
 
 .currency-control input::placeholder,
+.date-control input::placeholder,
 .number-control input::placeholder,
 .percent-control input::placeholder {
   color: #a7b8bb;
+}
+
+.period-fieldset {
+  margin: 0 0 20px;
+  padding: 18px 18px 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.period-fieldset legend {
+  padding: 0 7px;
+  color: var(--navy);
+  font-size: 0.86rem;
+  font-weight: 820;
+}
+
+.period-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.period-grid .field {
+  margin-bottom: 0;
+}
+
+.period-fieldset .field-help {
+  margin-top: 10px;
+}
+
+.summary-period {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
 }
 
 .select-wrap {
@@ -1250,6 +1290,7 @@ footer p {
 .copy-button:focus-visible,
 .danger-button:focus-visible,
 .item-action:focus-visible,
+.date-control:focus-within,
 .number-control:focus-within,
 .percent-control:focus-within,
 summary:focus-visible {
@@ -1316,6 +1357,10 @@ summary:focus-visible {
   }
 
   .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .period-grid {
     grid-template-columns: 1fr;
   }
 
