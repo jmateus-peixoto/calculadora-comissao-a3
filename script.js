@@ -82,6 +82,9 @@ const elements = {
   agencyRate: document.querySelector("#agencyRate"),
   agencyRateControl: document.querySelector(".percent-control"),
   agencyRateError: document.querySelector("#agencyRateError"),
+  saleNumber: document.querySelector("#saleNumber"),
+  saleNumberControl: document.querySelector(".number-control"),
+  saleNumberError: document.querySelector("#saleNumberError"),
   saleType: document.querySelector("#saleType"),
   currentProductName: document.querySelector("#currentProductName"),
   currentProductMeta: document.querySelector("#currentProductMeta"),
@@ -177,6 +180,11 @@ function parsePercent(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function parseSaleNumber(value) {
+  const parsed = Number.parseInt(String(value || "").replace(/\D/g, ""), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
 function formatPercentInput(value) {
   return String(Number.isFinite(value) ? value : 10).replace(",", ".");
 }
@@ -267,6 +275,12 @@ function setAgencyRateError(show) {
   elements.agencyRateError.hidden = !show;
   elements.agencyRateControl.classList.toggle("invalid", show);
   elements.agencyRate.setAttribute("aria-invalid", String(show));
+}
+
+function setSaleNumberError(show) {
+  elements.saleNumberError.hidden = !show;
+  elements.saleNumberControl.classList.toggle("invalid", show);
+  elements.saleNumber.setAttribute("aria-invalid", String(show));
 }
 
 function populateSaleTypes() {
@@ -390,7 +404,7 @@ function renderSales() {
         <span class="sale-index">Venda<br>${index + 1}</span>
         <div>
           <h3>${calculation.product.description} <span>(${formatRate(calculation.selectedRate)})</span></h3>
-          <p>${calculation.product.code} · ${calculation.product.category} · ${calculation.product.classification} · ${getRoleLabel()}</p>
+          <p>Venda nº ${sale.saleNumber || index + 1} · ${calculation.product.code} · ${calculation.product.category} · ${calculation.product.classification} · ${getRoleLabel()}</p>
         </div>
       </div>
 
@@ -459,8 +473,10 @@ function refreshAllCalculations() {
 function resetForm({ preserveProduct = true, preserveAgencyRate = true, focus = true } = {}) {
   state.editingId = null;
   elements.saleValue.value = "";
+  elements.saleNumber.value = "";
   setValueError(false);
   setAgencyRateError(false);
+  setSaleNumberError(false);
 
   if (!preserveProduct) {
     elements.saleType.value = "BILI";
@@ -491,6 +507,7 @@ function addOrUpdateSale(event) {
   event.preventDefault();
   const value = parseCurrency(elements.saleValue.value);
   const agencyRate = parsePercent(elements.agencyRate.value);
+  const saleNumber = parseSaleNumber(elements.saleNumber.value);
 
   if (value <= 0) {
     setValueError(true);
@@ -506,6 +523,13 @@ function addOrUpdateSale(event) {
     return;
   }
 
+  if (saleNumber <= 0) {
+    setSaleNumberError(true);
+    elements.saleNumber.focus();
+    showToast("Informe um número de venda válido.");
+    return;
+  }
+
   const productCode = elements.saleType.value;
 
   if (state.editingId) {
@@ -513,6 +537,7 @@ function addOrUpdateSale(event) {
     if (sale) {
       sale.value = value;
       sale.agencyRate = agencyRate;
+      sale.saleNumber = saleNumber;
       sale.productCode = productCode;
       showToast("Venda atualizada.");
     }
@@ -521,7 +546,7 @@ function addOrUpdateSale(event) {
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-    state.sales.push({ id, value, agencyRate, productCode });
+    state.sales.push({ id, value, agencyRate, saleNumber, productCode });
     showToast("Venda adicionada ao total.");
   }
 
@@ -536,12 +561,14 @@ function editSale(id) {
   state.editingId = id;
   elements.saleValue.value = inputNumberFormatter.format(sale.value);
   elements.agencyRate.value = formatPercentInput(sale.agencyRate);
+  elements.saleNumber.value = sale.saleNumber || "";
   elements.saleType.value = sale.productCode;
   elements.saleFormTitle.textContent = "Edite a venda selecionada";
   elements.submitSaleButton.textContent = "Salvar alteração";
   elements.cancelEditButton.hidden = false;
   setValueError(false);
   setAgencyRateError(false);
+  setSaleNumberError(false);
   updateProductPreview();
 
   elements.saleForm.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -586,7 +613,7 @@ function buildSummaryText() {
 
   state.sales.forEach((sale, index) => {
     const calculation = calculateSale(sale);
-    lines.push(`${index + 1}. ${calculation.product.description} (${formatRate(calculation.selectedRate)})`);
+    lines.push(`${index + 1}. Venda nº ${sale.saleNumber || index + 1} - ${calculation.product.description} (${formatRate(calculation.selectedRate)})`);
     lines.push(`   Venda: ${formatCurrency(sale.value)} | Ganho da agência: ${formatRate(calculation.agencyRate)} = ${formatCurrency(calculation.agencyGain)}`);
     lines.push(`   Comissão: ${formatCurrency(calculation.agencyGain)} × ${formatRate(calculation.selectedRate)} = ${formatCurrency(calculation.selectedCommission)}`);
 
@@ -622,6 +649,7 @@ function buildPdfTableHtml() {
     return `
       <tr>
         <td>${index + 1}</td>
+        <td>${sale.saleNumber || index + 1}</td>
         <td>${escapeHtml(calculation.product.description)}<br><small>${escapeHtml(calculation.product.code)} · ${escapeHtml(calculation.product.category)}</small></td>
         <td>${formatCurrency(sale.value)}</td>
         <td>${formatRate(calculation.agencyRate)}</td>
@@ -667,6 +695,7 @@ function buildPdfTableHtml() {
     <thead>
       <tr>
         <th>#</th>
+        <th>Nº venda</th>
         <th>Venda</th>
         <th>Valor total</th>
         <th>% agência</th>
@@ -762,6 +791,9 @@ function initialize() {
   elements.agencyRate.addEventListener("input", () => {
     const agencyRate = parsePercent(elements.agencyRate.value);
     if (agencyRate >= 7 && agencyRate <= 40) setAgencyRateError(false);
+  });
+  elements.saleNumber.addEventListener("input", () => {
+    if (parseSaleNumber(elements.saleNumber.value) > 0) setSaleNumberError(false);
   });
   elements.saleValue.addEventListener("blur", formatInputOnBlur);
   elements.saleValue.addEventListener("focus", () => elements.saleValue.select());

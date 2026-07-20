@@ -519,6 +519,7 @@ p {
 }
 
 .currency-control,
+.number-control,
 .percent-control {
   display: flex;
   align-items: center;
@@ -531,6 +532,7 @@ p {
 }
 
 .currency-control:focus-within,
+.number-control:focus-within,
 .percent-control:focus-within,
 .select-wrap:focus-within,
 .search-control:focus-within {
@@ -540,6 +542,7 @@ p {
 }
 
 .currency-control.invalid,
+.number-control.invalid,
 .percent-control.invalid {
   border-color: rgba(156, 60, 60, 0.65);
   box-shadow: 0 0 0 4px rgba(156, 60, 60, 0.1);
@@ -563,6 +566,7 @@ p {
 }
 
 .currency-control input,
+.number-control input,
 .percent-control input {
   width: 100%;
   min-width: 0;
@@ -576,6 +580,7 @@ p {
 }
 
 .currency-control input::placeholder,
+.number-control input::placeholder,
 .percent-control input::placeholder {
   color: #a7b8bb;
 }
@@ -1245,6 +1250,7 @@ footer p {
 .copy-button:focus-visible,
 .danger-button:focus-visible,
 .item-action:focus-visible,
+.number-control:focus-within,
 .percent-control:focus-within,
 summary:focus-visible {
   outline: 0;

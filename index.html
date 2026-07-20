@@ -170,6 +170,25 @@
           </div>
 
           <div class="field">
+            <label for="saleNumber">Número da venda</label>
+            <div class="number-control">
+              <input
+                id="saleNumber"
+                name="saleNumber"
+                type="number"
+                inputmode="numeric"
+                min="1"
+                step="1"
+                autocomplete="off"
+                placeholder="Exemplo: 12345"
+                aria-describedby="saleNumberHint saleNumberError"
+              >
+            </div>
+            <p class="field-hint" id="saleNumberHint">Informe o número de identificação da venda.</p>
+            <p class="field-error" id="saleNumberError" hidden>Informe um número de venda válido.</p>
+          </div>
+
+          <div class="field">
             <label for="saleType">Tipo de venda</label>
             <div class="select-wrap">
               <select id="saleType" name="saleType" required aria-describedby="saleTypeHint"></select>
