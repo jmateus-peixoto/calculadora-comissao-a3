@@ -108,8 +108,6 @@ const elements = {
   totalIssuer: document.querySelector("#totalIssuer"),
   totalPromoter: document.querySelector("#totalPromoter"),
   savePdfButton: document.querySelector("#savePdfButton"),
-  copySummaryButton: document.querySelector("#copySummaryButton"),
-  clearAllButton: document.querySelector("#clearAllButton"),
   listTotal: document.querySelector("#listTotal"),
   emptyState: document.querySelector("#emptyState"),
   salesList: document.querySelector("#salesList"),
@@ -491,8 +489,6 @@ function updateSummary() {
   elements.totalIssuer.textContent = formatCurrency(totals.issuer);
   elements.totalPromoter.textContent = formatCurrency(totals.promoter);
   elements.savePdfButton.disabled = count === 0;
-  elements.copySummaryButton.disabled = count === 0;
-  elements.clearAllButton.disabled = count === 0;
 
   if (count === 0) {
     elements.totalCaption.textContent = "Adicione a primeira venda para iniciar o cálculo.";
@@ -635,52 +631,6 @@ function removeSale(id) {
   showToast("Venda excluída.");
 }
 
-function clearAllSales() {
-  if (state.sales.length === 0) return;
-
-  const confirmed = window.confirm("Remover todas as vendas adicionadas?");
-  if (!confirmed) return;
-
-  state.sales = [];
-  resetForm({ preserveProduct: false, preserveAgencyRate: false, focus: false });
-  renderSales();
-  showToast("Todas as vendas foram removidas.");
-}
-
-function buildSummaryText() {
-  const totals = getTotals();
-  const lines = [
-    "RESUMO DA CALCULADORA DE COMISSÃO",
-    `Período das vendas: ${getPeriodLabel()}`,
-    `Regra selecionada: ${getRoleLabel()}`,
-    `Percentual da promotora nos produtos de 5%: ${formatRate(state.promoterRate)}`,
-    "Comissão calculada sobre o ganho da agência, não sobre o valor total da venda.",
-    ""
-  ];
-
-  state.sales.forEach((sale, index) => {
-    const calculation = calculateSale(sale);
-    lines.push(`${index + 1}. Venda nº ${sale.saleNumber || index + 1} - ${calculation.product.description} (${formatRate(calculation.selectedRate)})`);
-    lines.push(`   Período: ${getPeriodLabel()}`);
-    lines.push(`   Venda: ${formatCurrency(sale.value)} | Ganho da agência: ${formatRate(calculation.agencyRate)} = ${formatCurrency(calculation.agencyGain)}`);
-    lines.push(`   Comissão: ${formatCurrency(calculation.agencyGain)} × ${formatRate(calculation.selectedRate)} = ${formatCurrency(calculation.selectedCommission)}`);
-
-    if (state.role === "ambos") {
-      lines.push(`   Emissora: ${formatCurrency(calculation.issuerCommission)} | Promotora: ${formatCurrency(calculation.promoterCommission)}`);
-    }
-  });
-
-  lines.push("");
-  lines.push(`Quantidade de vendas: ${state.sales.length}`);
-  lines.push(`Total vendido: ${formatCurrency(totals.salesValue)}`);
-  lines.push(`Ganho total da agência: ${formatCurrency(totals.agencyGain)}`);
-  lines.push(`Total da emissora: ${formatCurrency(totals.issuer)}`);
-  lines.push(`Total da promotora: ${formatCurrency(totals.promoter)}`);
-  lines.push(`COMISSÃO TOTAL: ${formatCurrency(totals.selected)}`);
-
-  return lines.join("\n");
-}
-
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -777,34 +727,6 @@ function saveTableAsPdf() {
   showToast("Escolha “Salvar como PDF” na janela de impressão.");
 }
 
-async function copyText(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch (error) {
-    const temporary = document.createElement("textarea");
-    temporary.value = text;
-    temporary.style.position = "fixed";
-    temporary.style.opacity = "0";
-    document.body.append(temporary);
-    temporary.select();
-
-    try {
-      return document.execCommand("copy");
-    } catch {
-      return false;
-    } finally {
-      temporary.remove();
-    }
-  }
-}
-
-async function copySummary() {
-  if (state.sales.length === 0) return;
-  const copied = await copyText(buildSummaryText());
-  showToast(copied ? "Resumo detalhado copiado." : "Não foi possível copiar automaticamente.");
-}
-
 function startCalculator() {
   const wasHidden = elements.calculatorArea.hidden;
 
@@ -864,9 +786,7 @@ function initialize() {
   elements.promoterRateInputs.forEach((input) => input.addEventListener("change", handleSettingsChange));
   elements.cancelEditButton.addEventListener("click", () => resetForm({ preserveProduct: true, preserveAgencyRate: true, focus: true }));
   elements.clearFormButton.addEventListener("click", () => resetForm({ preserveProduct: false, preserveAgencyRate: false, focus: true }));
-  elements.clearAllButton.addEventListener("click", clearAllSales);
   elements.savePdfButton.addEventListener("click", saveTableAsPdf);
-  elements.copySummaryButton.addEventListener("click", copySummary);
   elements.rateSearch.addEventListener("input", (event) => renderRateTable(event.target.value));
 
   elements.salesList.addEventListener("click", (event) => {
